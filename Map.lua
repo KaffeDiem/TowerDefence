@@ -18,7 +18,7 @@ function Map:new(tilesheetpath, map, mapheight, tileW, tileH)
   self.tileHeight = tileH -- Pixels tall
   self.imageWidth = self.tilesheet:getWidth()
   self.imageHeight = self.tilesheet:getHeight()
-  self.imageSelector = love.graphics.newImage("images/selector.png")
+  self.imageSelector = love.graphics.newImage("images/tile_selector.png")
 
   self.scale = 2
 

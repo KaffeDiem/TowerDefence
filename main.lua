@@ -49,7 +49,7 @@ function love.load()
 
   keyboardOnly = true
 
-  MAP = Map("images/tiles/iso_sprite_sheet.png", lvl1, lvl1_height, 32, 32)
+  MAP = Map("images/tile_sheet.png", lvl1, lvl1_height, 32, 32)
   DRAGON = Dragon()
 end
 
