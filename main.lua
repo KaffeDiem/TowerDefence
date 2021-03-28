@@ -9,10 +9,12 @@ love.graphics.setDefaultFilter('nearest')
 
 function love.load()
 
+  love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
+
   lvl1 = {
-    {16, 16, 16},
-    {16, 16, 16},
-    {16, 16, 16},
+    {3, 6, 3},
+    {1, 6, 1},
+    {1, 6, 1},
   }
 
   lvl1_height = {
@@ -49,7 +51,7 @@ function love.load()
 
   keyboardOnly = true
 
-  MAP = Map("images/tile_sheet.png", lvl1, lvl1_height, 32, 32)
+  MAP = Map("images/tile_sheet.png", lvl2, lvl2_height, 32, 32)
   DRAGON = Dragon()
 end
 
@@ -70,6 +72,9 @@ end
 
 
 function love.draw()
+  love.graphics.setFont(
+    love.graphics.newFont("fonts/fira.ttf", 10)
+  )
 
   love.graphics.print(
     "FPS: " .. love.timer.getFPS(), 10, 10
