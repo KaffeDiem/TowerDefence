@@ -58,34 +58,16 @@ end
 
 
 function Map:update(dt)
-  -- Movement and translation layer of the map
-  self:mapMovement(dt)
 
+  self:mapMovement(dt) -- Movement and translation layer of the map
   -- Mouse coords as in game coords (translated mouse x, y)
   self.tmx, self.tmy = self.mx - self.tx, self.my - self.ty
 
-  -- Calculate the current tile based on tiles hovered
-  local minDistanceFromTileToCursor = 1000
-  for i = 1, #self.tilesHovered do
-    local distanceToTileFromCursor = self:getDistanceBetweenPoints(
-      self.tmx, self.tmy,
-      self.tilesHovered[i][3] + (self.tileWidth*self.scale/2),
-      self.tilesHovered[i][4] + (self.tileHeight*self.scale/2)
-    )
-
-    if distanceToTileFromCursor < minDistanceFromTileToCursor then
-      minDistanceFromTileToCursor = distanceToTileFromCursor
-      self.tileSelected = self.tilesHovered[i]
-    end
-  end
-
-  if #self.tilesHovered < 1 then -- If no tiles are hovered then none selected
-    self.tileSelected = nil
-  end
+  self:getTileSelected() -- Get selected tile when mouse is hovering
 
   self:changeTiles() -- Change height and type of tiles
 
-  self.DRAGON:update(dt)
+  self.DRAGON:update(dt) -- //TODO implement the A* and dragon
 end
 
 
@@ -146,6 +128,7 @@ function Map:getDistanceBetweenPoints(x1, y1, x2, y2)
 end
 
 
+-- Handles movement of the map such that you can 'move around'
 function Map:mapMovement(dt)
   self.mx, self.my = love.mouse.getPosition()
   if (self.my < love.graphics.getHeight() * 0.1 and not keyboardOnly) or
@@ -176,6 +159,7 @@ function Map:mapMovement(dt)
 end
 
 
+-- Handles chaning the height or type of tiles (mostly just for fun)
 function Map:changeTiles()
   if self.tileSelected ~= nil then -- Raise and lower tiles if it is not nil
     if love.mouse.isDown(1) and -- If mouse is pressed raise the selected tile
@@ -220,6 +204,31 @@ function Map:changeTiles()
           self.map[self.tileSelected[1]][self.tileSelected[2]] - 1
       end
       self.timerTileHeightLast = love.timer.getTime()
+    end
+  end
+end
+
+
+-- Get the currently hovered tile
+function Map:getTileSelected()
+  if #self.tilesHovered < 1 then -- If no tiles are hovered then none selected
+    self.tileSelected = nil
+  end
+
+  local minDistanceFromTileToCursor = nil
+  for i = 1, #self.tilesHovered do
+    local distanceToTileFromCursor = self:getDistanceBetweenPoints(
+      self.tmx, self.tmy,
+      self.tilesHovered[i][3] + (self.tileWidth*self.scale/2),
+      self.tilesHovered[i][4] + (self.tileHeight*self.scale/2)
+    )
+
+    if minDistanceFromTileToCursor == nil then -- Set first tile to current one
+      minDistanceFromTileToCursor = distanceToTileFromCursor
+      self.tileSelected = self.tilesHovered[i]
+    elseif distanceToTileFromCursor < minDistanceFromTileToCursor then
+      minDistanceFromTileToCursor = distanceToTileFromCursor
+      self.tileSelected = self.tilesHovered[i] -- This tile is closer to cursor
     end
   end
 end
