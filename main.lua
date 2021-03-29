@@ -18,15 +18,26 @@ function love.load()
   love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
 
   lvl1 = {
-    {6, 1, 6},
-    {6, 1, 6},
-    {6, 6, 6},
+    {6, 6, 1, 6, 6},
+    {1, 6, 6, 6, 6},
+    {6, 1, 1, 1, 6},
+    {6, 6, 6, 6, 6},
+    {6, 6, 1, 6, 1},
+    {1, 6, 6, 6, 6},
+    {1, 1, 1, 6, 6},
+    {6, 6, 6, 6, 6},
   }
 
+
   lvl1_height = {
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
   }
 
   lvl2 = {
@@ -68,6 +79,10 @@ function love.keypressed(key)
       MAP.tileSelectionMode = 'changetile'
     else MAP.tileSelectionMode = 'height'
     end
+  end
+
+  if key == 'enter' then
+    love.load()
   end
 end
 

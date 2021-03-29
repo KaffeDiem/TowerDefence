@@ -54,10 +54,12 @@ function Map:new(tilesheetpath, map, mapheight, tileW, tileH)
 
   -- ALL THINGS RELATED TO ENEMIES --
   self.enemySpawn = Vector(1, 1)
-  self.enemyGoal = Vector(1, 3)
+  print("Moving to ", #self.map, #self.map[1])
+  self.enemyGoal = Vector(#self.map, 1)
   self.enemies = {}
 
-  table.insert(self.enemies, Dragon(self.enemySpawn, self.enemyGoal))
+  table.insert(self.enemies,
+    Dragon(self.enemySpawn, self.enemyGoal, self.x, self.y, self.map, {6}))
 end
 
 
@@ -71,7 +73,7 @@ function Map:update(dt)
   self:changeTiles() -- Change height and type of tiles
 
   for _, v in ipairs(self.enemies) do
-    v:update(self.x, self.y, dt)
+    v:update(dt)
   end
 end
 
@@ -216,7 +218,7 @@ function Map:changeTiles()
 end
 
 
--- Get the currently hovered tile
+-- Get the currently selected tile
 function Map:getTileSelected()
   if #self.tilesHovered < 1 then -- If no tiles are hovered then none selected
     self.tileSelected = nil
