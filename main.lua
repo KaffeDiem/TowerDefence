@@ -1,5 +1,11 @@
 -- Importing modules
 Class = require "modules.classic"
+
+-- Import A* algorithm
+require "modules/luafinding/vector"
+require "modules/luafinding/heap"
+require "modules/luafinding/luafinding"
+
 require "Map"
 require "entities/Dragon"
 
@@ -12,9 +18,9 @@ function love.load()
   love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
 
   lvl1 = {
-    {3, 6, 3},
-    {1, 6, 1},
-    {1, 6, 1},
+    {6, 1, 6},
+    {6, 1, 6},
+    {6, 6, 6},
   }
 
   lvl1_height = {
@@ -50,9 +56,9 @@ function love.load()
   }
 
   keyboardOnly = true
+  SCALE = 2
 
-  MAP = Map("images/tile_sheet.png", lvl2, lvl2_height, 32, 32)
-  DRAGON = Dragon()
+  MAP = Map("images/tile_sheet.png", lvl1, lvl1_height, 32, 32)
 end
 
 

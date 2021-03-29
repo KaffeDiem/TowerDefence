@@ -20,10 +20,10 @@ function Map:new(tilesheetpath, map, mapheight, tileW, tileH)
   self.imageHeight = self.tilesheet:getHeight()
   self.imageSelector = love.graphics.newImage("images/tile_selector.png")
 
-  self.scale = 2
+  SCALE = 2
 
-  self.x = love.graphics.getWidth() / 2 - (self.tileWidth / 2) * self.scale
-  self.y = 100
+  self.x = love.graphics.getWidth() / 2 - (self.tileWidth / 2) * SCALE
+  self.y = love.graphics.getHeight() * 0.2
   -- Initialization of the mouse and translation layer
   self.tx = 0
   self.ty = 0
@@ -52,8 +52,12 @@ function Map:new(tilesheetpath, map, mapheight, tileW, tileH)
     end
   end
 
-  self.DRAGON = Dragon()
+  -- ALL THINGS RELATED TO ENEMIES --
+  self.enemySpawn = Vector(1, 1)
+  self.enemyGoal = Vector(1, 3)
+  self.enemies = {}
 
+  table.insert(self.enemies, Dragon(self.enemySpawn, self.enemyGoal))
 end
 
 
@@ -64,10 +68,11 @@ function Map:update(dt)
   self.tmx, self.tmy = self.mx - self.tx, self.my - self.ty
 
   self:getTileSelected() -- Get selected tile when mouse is hovering
-
   self:changeTiles() -- Change height and type of tiles
 
-  self.DRAGON:update(dt) -- //TODO implement the A* and dragon
+  for _, v in ipairs(self.enemies) do
+    v:update(self.x, self.y, dt)
+  end
 end
 
 
@@ -83,26 +88,26 @@ function Map:draw()
 
         local x =
           self.x + -- Starting point
-          (j * ((self.tileWidth / 2) * self.scale)) - -- The width on rows
-          (i * ((self.tileWidth / 2) * self.scale)) -- The width on cols
+          (j * ((self.tileWidth / 2) * SCALE)) - -- The width on rows
+          (i * ((self.tileWidth / 2) * SCALE)) -- The width on cols
         local y =
           self.y +
-          (i * ((self.tileHeight / 4) * self.scale)) + -- The height on rows
-          (j * ((self.tileHeight / 4) * self.scale)) -- The width on cols
+          (i * ((self.tileHeight / 4) * SCALE)) + -- The height on rows
+          (j * ((self.tileHeight / 4) * SCALE)) -- The width on cols
         -- Take the height map into account
         local y = y - self.mapheight[i][j] * 8
         -- Draw the tiles
         love.graphics.draw(self.tilesheet, self.tiles[self.map[i][j]],
           x, y,
           0,
-          self.scale,
-          self.scale
+          SCALE,
+          SCALE
         )
 
         if self.tmx > x and -- Hitbox between mouse and tile
-        self.tmx < x + self.tileWidth * self.scale and
+        self.tmx < x + self.tileWidth * SCALE and
         self.tmy > y + self.tileHeight / 2 and
-        self.tmy < y + self.tileHeight * self.scale then
+        self.tmy < y + self.tileHeight * SCALE then
           -- Add the tile to tiles hovered, if mouse is on top of it
           table.insert(self.tilesHovered, {i, j, x, y})
 
@@ -115,10 +120,12 @@ function Map:draw()
   if self.tileSelected ~= nil then
     love.graphics.draw(self.imageSelector,
       self.tileSelected[3], self.tileSelected[4],
-      0, self.scale, self.scale)
+      0, SCALE, SCALE)
   end
 
-  self.DRAGON:draw()
+  for _, enemy in ipairs(self.enemies) do
+    enemy:draw()
+  end
 
 end
 
@@ -219,8 +226,8 @@ function Map:getTileSelected()
   for i = 1, #self.tilesHovered do
     local distanceToTileFromCursor = self:getDistanceBetweenPoints(
       self.tmx, self.tmy,
-      self.tilesHovered[i][3] + (self.tileWidth*self.scale/2),
-      self.tilesHovered[i][4] + (self.tileHeight*self.scale/2)
+      self.tilesHovered[i][3] + (self.tileWidth*SCALE/2),
+      self.tilesHovered[i][4] + (self.tileHeight*SCALE/2)
     )
 
     if minDistanceFromTileToCursor == nil then -- Set first tile to current one
