@@ -10,6 +10,12 @@ function isvector( vTbl )
     return getmetatable( vTbl ) == Vector
 end
 
+-- Distance between two vectors
+-- Returns a constant
+function vectorDist(start, goal)
+  return math.sqrt((goal.x - start.x)^2 + (goal.y - start.y)^2)
+end
+
 function Vector.__unm( vTbl )
     return newVector( -vTbl.x, -vTbl.y )
 end

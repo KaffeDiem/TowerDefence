@@ -7,6 +7,7 @@ require "modules/luafinding/heap"
 require "modules/luafinding/luafinding"
 
 require "Map"
+require "entities/Mob"
 require "entities/Dragon"
 
 -- Keep images pixelated as the are scaled in size
@@ -18,14 +19,14 @@ function love.load()
   love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
 
   lvl1 = {
-    {6, 6, 1, 6, 6},
+    {11, 6, 1, 1, 1},
     {1, 6, 6, 6, 6},
     {6, 1, 1, 1, 6},
-    {6, 6, 6, 6, 6},
-    {6, 6, 1, 6, 1},
+    {6, 0, 0, 6, 6},
+    {1, 0, 0, 6, 1},
     {1, 6, 6, 6, 6},
-    {1, 1, 1, 6, 6},
-    {6, 6, 6, 6, 6},
+    {1, 1, 30, 0, 6},
+    {11, 6, 6, 6, 6},
   }
 
 
@@ -40,36 +41,13 @@ function love.load()
     {0, 0, 0, 0, 0},
   }
 
-  lvl2 = {
-    {39, 39, 38, 38, 38, 38},
-    {39, 38, 38, 38, 38, 38},
-    {39, 38, 38, 38, 38, 38},
-    {37, 38, 38, 37, 37, 37},
-    {37, 37, 37, 37, 37, 37},
-    {14, 14, 14, 14, 14, 14},
-    {14, 14, 14, 14, 14, 14},
-    {1, 1, 1, 1, 1, 1},
-    {2, 2, 1, 1, 1, 1},
-    {2, 2, 2, 1, 1, 1}
-  }
-
-  lvl2_height = {
-    {3, 3, 2, 2, 1, 0},
-    {2, 2, 2, 1, 0, 0},
-    {2, 1, 1, 1, 0, 0},
-    {1, 1, 1, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-  }
-
   keyboardOnly = true
   SCALE = 2
 
-  MAP = Map("images/tile_sheet.png", lvl1, lvl1_height, 32, 32)
+  local spawn   = Vector(1, 1)
+  local goal    = Vector(8, 1)
+
+  MAP = Map(lvl1, lvl1_height, spawn, goal)
 end
 
 
