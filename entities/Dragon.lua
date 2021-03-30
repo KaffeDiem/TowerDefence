@@ -2,16 +2,16 @@ Dragon = Mob:extend()
 
 
 function Dragon:new(spawn, target, worldMap, worldPos)
-  Dragon.super:new(spawn, target, worldMap, worldPos)
-  self.movSpeed = 100
+  self.super:new(spawn, target, worldMap, worldPos) -- //BUG same function called for multiple objects
+  -- Dragon.super.movSpeed = 80 -- Overwrite default movSpeed
 end
 
 
 function Dragon:update(dt)
-  Dragon.super:update(dt)
+  self.super:update(dt)
 end
 
 
 function Dragon:draw()
-  Dragon.super:draw(dt)
+  self.super:draw(dt)
 end

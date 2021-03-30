@@ -36,9 +36,10 @@ function Map:mapMovement(dt)
 end
 
 
--- Handles chaning the height or type of tiles (mostly just for fun)
+-- Handles chaning the height or type of tiles (mostly just for fun) //FIXME
 function Map:changeTiles()
   if self.tileSelected ~= nil then -- Raise and lower tiles if it is not nil
+    -- RAISE AND LOWER TILES
     if love.mouse.isDown(1) and -- If mouse is pressed raise the selected tile
     love.timer.getTime() >
     self.timerTileHeight + self.timerTileHeightLast and
@@ -55,7 +56,15 @@ function Map:changeTiles()
         self.mapheight[self.tileSelected[1]][self.tileSelected[2]] - 1
       self.timerTileHeightLast = love.timer.getTime()
     end
-
+    -- PLACE TOWERS
+    if love.mouse.isDown(1) and
+    love.timer.getTime() >
+    self.timerTileHeight + self.timerTileHeightLast and
+    self.tileSelectionMode == 'tower' then
+      table.insert(self.towers, Tower(Vector(self.tileSelected[1], self.tileSelected[2]), self.map, Vector(self.x, self.y)))
+      self.timerTileHeightLast = love.timer.getTime()
+    end
+    -- CHANGE TILES
     if love.mouse.isDown(1) and
     love.timer.getTime() >
     self.timerTileHeight + self.timerTileHeightLast and

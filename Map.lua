@@ -50,6 +50,7 @@ function Map:new(map, mapheight, enemySpawn, enemyGoal)
   self.enemySpawn = enemySpawn
   self.enemyGoal = enemyGoal
 
+  self.towers = {}
   self.enemies = {} -- //TODO remove enemies once they have reached their goal
 
   table.insert(self.enemies,
@@ -58,6 +59,7 @@ end
 
 
 function Map:update(dt)
+  print(#self.enemies)
 
   self:mapMovement(dt) -- Movement and translation layer of the map
   -- Mouse coords as in game coords (translated mouse x, y)
@@ -66,13 +68,21 @@ function Map:update(dt)
   self:getTileSelected() -- Get selected tile when mouse is hovering
   self:changeTiles() -- Change height and type of tiles
 
-  for _, v in ipairs(self.enemies) do
-    v:update(dt)
+  if self.enemies ~= nil then
+    for _, enemy in ipairs(self.enemies) do
+      enemy:update(dt)
+    end
+  end
+
+  if self.towers ~= nil then
+    for _, tower in ipairs(self.towers) do
+      tower:update(dt)
+    end
   end
 
   if love.keyboard.isDown('s') then
     table.insert(self.enemies,
-      Dragon(self.enemySpawn, self.enemyGoal, self.x, self.y, self.map, {6, 11, 16, 21}))
+      Dragon(self.enemySpawn, self.enemyGoal, self.map, Vector(self.x, self.y)))
   end
 end
 
@@ -124,8 +134,15 @@ function Map:draw()
       0, SCALE, SCALE)
   end
 
-  for _, enemy in ipairs(self.enemies) do
-    enemy:draw()
+  if self.enemies ~= nil then
+    for _, enemy in ipairs(self.enemies) do
+      enemy:draw()
+    end
   end
 
+  if self.towers ~= nil then
+    for _, tower in ipairs(self.towers) do
+      tower:draw()
+    end
+  end
 end

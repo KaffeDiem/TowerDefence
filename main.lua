@@ -8,7 +8,9 @@ require "modules/luafinding/luafinding"
 
 require "Map"
 require "entities/Mob"
+require "entities/Tower"
 require "entities/Dragon"
+require "entities/Skeleton"
 
 -- Keep images pixelated as the are scaled in size
 love.graphics.setDefaultFilter('nearest')
@@ -20,6 +22,14 @@ function love.load()
 
   lvl1 = {
     {11, 6, 1, 1, 1},
+    {1, 6, 6, 6, 6},
+    {6, 1, 1, 1, 6},
+    {6, 0, 0, 6, 6},
+    {1, 0, 0, 6, 1},
+    {1, 6, 6, 6, 6},
+    {1, 1, 30, 0, 6},
+    {6, 6, 6, 6, 6},
+    {6, 6, 1, 1, 1},
     {1, 6, 6, 6, 6},
     {6, 1, 1, 1, 6},
     {6, 0, 0, 6, 6},
@@ -39,13 +49,21 @@ function love.load()
     {0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0},
   }
 
   keyboardOnly = true
   SCALE = 2
 
   local spawn   = Vector(1, 1)
-  local goal    = Vector(8, 1)
+  local goal    = Vector(16, 1)
 
   MAP = Map(lvl1, lvl1_height, spawn, goal)
 end
@@ -55,11 +73,13 @@ function love.keypressed(key)
   if key == 'space' then
     if MAP.tileSelectionMode == 'height' then
       MAP.tileSelectionMode = 'changetile'
+    elseif MAP.tileSelectionMode == 'changetile' then
+      MAP.tileSelectionMode = 'tower'
     else MAP.tileSelectionMode = 'height'
     end
   end
 
-  if key == 'enter' then
+  if key == 'r' then
     love.load()
   end
 end

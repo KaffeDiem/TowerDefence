@@ -4,6 +4,7 @@ Mob = Class:extend()
 function Mob:new(spawn, target, worldMap, worldPos)
   self.dimensions = Vector( 32, 32) -- Default texture is 32x32
   self.passable = {6, 11} -- All mobs can walk on wood
+  self.worldMap = worldMap
   self.worldPos = worldPos -- The position which the world starts rendering
   self.movSpeed = 50 -- Default movementSpeed of 50
   self.moving = true
@@ -12,7 +13,7 @@ function Mob:new(spawn, target, worldMap, worldPos)
   self.image = love.graphics.newImage('images/placeholder.png')
 
   -- The path which the mob is going to take as a list
-  self.path = Mob.createPassableMap(worldMap, self.passable)
+  self.path = Mob.createPassableMap(self.worldMap, self.passable)
   self.path = Luafinding.FindPath(spawn, target, self.path)
   -- Check that the path is valid
   assert(self.path ~= nil, "Enemy could not find valid path")
@@ -27,7 +28,6 @@ function Mob:new(spawn, target, worldMap, worldPos)
     Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
 
   self.distNextPos = vectorDist(self.currPixelPos, self.nextPixelPos)
-  print("mob", self.distNextPos)
   self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
 end
 
@@ -59,6 +59,13 @@ function Mob:draw()
   love.graphics.draw(
     self.image, self.currPixelPos.x, self.currPixelPos.y, 0, SCALE, SCALE
   )
+  -- Draw the path which the enemies will follow
+  for _, vec in ipairs(self.path) do
+    local pos = Mob.posToPixel(vec, self.dimensions, self.worldPos)
+    love.graphics.circle('fill', pos.x + self.dimensions.x / 2 * SCALE,
+      pos.y + self.dimensions.y / 2 * SCALE, 3
+    )
+  end
 end
 
 
@@ -111,22 +118,17 @@ end
 -- {{false, false, false}, {true, true, true}, {false, false, false}}
 function Mob.createPassableMap(worldMap, passable)
   local passMap = {}
-
   for i = 1, #worldMap do
     passMap[i] = {}
-
     for j = 1, #worldMap[i] do
       local canWalk = false
-
       for _, v in ipairs(passable) do
         if v == worldMap[i][j] then
           canWalk = true
         end
       end
-
       table.insert(passMap[i], canWalk)
     end
   end
-
   return passMap
 end
