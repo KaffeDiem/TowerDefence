@@ -12,7 +12,7 @@ end
 
 -- Distance between two vectors
 -- Returns a constant
-function vectorDist(start, goal)
+function Vector.dist(start, goal)
   return math.sqrt((goal.x - start.x)^2 + (goal.y - start.y)^2)
 end
 

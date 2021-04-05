@@ -1,24 +1,33 @@
 Mob = Class:extend()
 
 
-function Mob:new(spawn, target, worldMap, worldPos)
-  self.dimensions = Vector( 32, 32) -- Default texture is 32x32
-  self.passable = {6, 11} -- All mobs can walk on wood
-  self.worldMap = worldMap
+function Mob:new(spawn, goal, map, worldPos)
+  self.dimensions = Vector( 32, 32 ) -- Default texture is 32x32
+  -- self.passable = {6, 11} -- All mobs can walk on wood
+  -- self.worldMap = worldMap
   self.worldPos = worldPos -- The position which the world starts rendering
+  self.map = map
+  self.spawn = spawn
+  self.goal = goal
+  self.passable = {6}
+
   self.movSpeed = 50 -- Default movementSpeed of 50
-  self.moving = true
 
   -- Use placeholder image if none is defined
   self.image = love.graphics.newImage('images/placeholder.png')
 
-  -- The path which the mob is going to take as a list
-  self.path = Mob.createPassableMap(self.worldMap, self.passable)
-  self.path = Luafinding.FindPath(spawn, target, self.path)
-  -- Check that the path is valid
-  assert(self.path ~= nil, "Enemy could not find valid path")
-  self.currPos = table.remove(self.path, 1) -- Get current position
-  self.nextPos = table.remove(self.path, 1) -- Get next position
+  self:createPassableMap() -- Create the tfmap
+  self.path = Luafinding.FindPath(self.spawn, self.goal, self.tfMap)
+
+  if self.path then
+    self.currPos = table.remove(self.path, 1) -- Get current position
+    self.nextPos = table.remove(self.path, 1) -- Get next position
+    self.moving = true
+  else
+    self.currPos = self.spawn
+    self.nextPos = self.spawn
+    self.moving = false
+  end
 
   self.spawnPixelPos = -- Position on pixel coordinates
     Mob.posToPixel(self.currPos, self.dimensions, self.worldPos)
@@ -27,7 +36,8 @@ function Mob:new(spawn, target, worldMap, worldPos)
   self.nextPixelPos =
     Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
 
-  self.distNextPos = vectorDist(self.currPixelPos, self.nextPixelPos)
+  self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
+
   self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
 end
 
@@ -35,11 +45,11 @@ end
 -- Updates the position of the mob
 function Mob:update(dt)
   -- If the entity should be moving
-  if self.moving then
+  if self.moving and self.path ~= nil then
     -- Take care of the movement
     self.currPixelPos = self.currPixelPos + self.direction *  self.movSpeed * dt
     -- Check if we have reached our next position
-    if vectorDist(self.startPixelPos, self.currPixelPos) > self.distNextPos then
+    if Vector.dist(self.startPixelPos, self.currPixelPos) > self.distNextPos then
       if #self.path > 0 then -- If there are still new tiles to visit
         -- If there are still moves to be made then calculate new path
         self:calculateNewPath()
@@ -60,20 +70,21 @@ function Mob:draw()
     self.image, self.currPixelPos.x, self.currPixelPos.y, 0, SCALE, SCALE
   )
   -- Draw the path which the enemies will follow
-  for _, vec in ipairs(self.path) do
-    local pos = Mob.posToPixel(vec, self.dimensions, self.worldPos)
-    love.graphics.circle('fill', pos.x + self.dimensions.x / 2 * SCALE,
-      pos.y + self.dimensions.y / 2 * SCALE, 3
-    )
+  if self.path ~= nil and self.moving then
+    for _, vec in ipairs(self.path) do
+      local pos = Mob.posToPixel(vec, self.dimensions, self.worldPos)
+      love.graphics.circle('fill', pos.x + self.dimensions.x / 2 * SCALE,
+        pos.y + self.dimensions.y / 2 * SCALE, 3
+      )
+    end
   end
 end
 
 
--- Calculates the new path a mob is supposed to go if it has reached its
--- goal but there are still new tiles to visit
+-- Calculate the new path from one tile to the next
 -- current, next: Two vector coordinates on the map
 -- Returns: an array of vector coordinates to visit as pixels
-function Mob:calculateNewPath(current, next)
+function Mob:calculateNewPath()
   self.currPos = self.nextPos
   self.nextPos = table.remove(self.path, 1)
 
@@ -83,7 +94,7 @@ function Mob:calculateNewPath(current, next)
   if #self.path > 0 then
     self.nextPixelPos =
       Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
-    self.distNextPos = vectorDist(self.currPixelPos, self.nextPixelPos)
+    self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
     self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
   end
 end
@@ -109,26 +120,73 @@ function Mob.posToPixel(pos, dim, worldPos)
 end
 
 
--- Takes a MxN size map and a list of objects which are passable as arguments
--- Is supposed to be used with pathfinding algorithm
+-- Create a passable map. This means a map that which enemies can walk on.
+-- This is used for pathfinding.
+-- A similar function is also used with mobs in the loading process.
 -- Example:
 -- worldMap = {{1, 1, 1,},{6, 6, 6,},{1, 1, 1,}}
 -- passable = {6}
 -- Return:
 -- {{false, false, false}, {true, true, true}, {false, false, false}}
-function Mob.createPassableMap(worldMap, passable)
-  local passMap = {}
-  for i = 1, #worldMap do
-    passMap[i] = {}
-    for j = 1, #worldMap[i] do
+function Mob:createPassableMap()
+  local tfMap = {}
+  for i = 1, #self.map do
+    tfMap[i] = {}
+    for j = 1, #self.map[i] do
       local canWalk = false
-      for _, v in ipairs(passable) do
-        if v == worldMap[i][j] then
+      for _, v in ipairs(self.passable) do
+        if v == self.map[i][j] then
           canWalk = true
         end
       end
-      table.insert(passMap[i], canWalk)
+      table.insert(tfMap[i], canWalk)
     end
   end
-  return passMap
+  self.tfMap = tfMap
 end
+
+
+-- Update the path of a mob, this is done when a tower is created or
+-- when a tile is updated and there is a new true/false map to be considered.
+function Mob:updatePath(newMap)
+
+  -- If mob has not reached end
+  if self.spawn ~= self.goal then
+    self.map = newMap or self.map
+    self:createPassableMap() -- Update the mobs true/false map
+
+    self.path = nil
+    -- Reset values before running the pathfinding algorithm
+    self.currPos.g, self.currPos.h, self.currPos.f, self.currPos.previous =
+      nil, nil, nil, nil
+    local path = Luafinding.FindPath(self.currPos, self.goal, self.tfMap)
+
+    if path then
+      table.remove(path, 1)
+      self.path = table.copy(path)
+      self.moving = true
+
+      if self.distNextPos == 0 then
+        -- // TODO update
+        -- self.currPos = table.remove(self.path, 1) -- Get current position
+        self.nextPos = table.remove(self.path, 1) -- Get next position
+        self.moving = true
+
+        self.nextPixelPos =
+          Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
+        self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
+        self.direction =
+          (self.nextPixelPos - self.currPixelPos) / self.distNextPos
+      end
+    end
+  end
+end
+
+
+
+function table.copy(t)
+  local u = { }
+  for k, v in pairs(t) do u[k] = v end
+  return setmetatable(u, getmetatable(t))
+end
+
