@@ -13,6 +13,7 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.imageWidth = self.tilesheet:getWidth()
   self.imageHeight = self.tilesheet:getHeight()
   self.imageSelector = love.graphics.newImage("images/tileselector.png")
+  self.walkable = {6}
 
   SCALE = 2
 

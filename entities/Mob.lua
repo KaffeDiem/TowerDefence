@@ -4,20 +4,19 @@ require 'entities.Mobhelper'
 
 function Mob:new(spawn, goal, map, worldPos)
   self.dimensions = Vector( 32, 32 ) -- Default texture is 32x32
-  -- self.passable = {6, 11} -- All mobs can walk on wood
+  -- self.walkable = {6, 11} -- All mobs can walk on wood
   -- self.worldMap = worldMap
   self.worldPos = worldPos -- The position which the world starts rendering
   self.map = map
   self.spawn = spawn
   self.goal = goal
-  self.passable = {6}
+  self.walkable = {6}
+  self.hasReachedEnd = false
+  self.health = 100
 
-  self.movSpeed = 50 -- Default movementSpeed of 50
+  self.movSpeed = 20 -- Default movementSpeed of 50
 
-  -- Use placeholder image if none is defined
-  self.image = love.graphics.newImage('images/placeholder.png')
-
-  self:createPassableMap() -- Create the tfmap
+  self:createwalkableMap() -- Create the tfmap
   self.path = Luafinding.FindPath(self.spawn, self.goal, self.tfMap)
 
   if self.path then
@@ -40,6 +39,13 @@ function Mob:new(spawn, goal, map, worldPos)
   self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
 
   self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
+
+  self.imageDirection = "north"
+  self.images = {
+    love.graphics.newImage("images/Mob/north.png"),
+    love.graphics.newImage("images/Mob/east.png")
+  }
+  self:updateImageDirection()
 end
 
 
@@ -66,17 +72,48 @@ end
 -- Draw the mob, default is just a placeholder image and function should
 -- be replaced in each mob
 function Mob:draw()
-  -- Draw the placeholder image
-  love.graphics.draw(
-    self.image, self.currPixelPos.x, self.currPixelPos.y, 0, SCALE, SCALE
-  )
+  if self.imageDirection == "north" then
+    love.graphics.draw(
+      self.images[1], self.currPixelPos.x, 
+      self.currPixelPos.y - (self.dimensions.y / 2) * SCALE, 0, SCALE, SCALE
+    )
+  elseif self.imageDirection == "east" then
+    love.graphics.draw(
+      self.images[2], self.currPixelPos.x, 
+      self.currPixelPos.y - (self.dimensions.y / 2) * SCALE, 0, SCALE, SCALE
+    )
+  elseif self.imageDirection == "west" then
+    love.graphics.draw(
+      self.images[1], self.currPixelPos.x + self.dimensions.x * SCALE,
+      self.currPixelPos.y - (self.dimensions.y / 4) * SCALE, 0, -SCALE, SCALE
+    )
+  elseif self.imageDirection == "south" then
+    love.graphics.draw(
+      self.images[2], self.currPixelPos.x + self.dimensions.x * SCALE,
+      self.currPixelPos.y - (self.dimensions.y / 4) * SCALE, 0, -SCALE, SCALE
+    )
+  end
+
+  -- Draw the health bar
+  love.graphics.setColor(1, 1, 1, 0.5)
+  love.graphics.rectangle('fill',
+    self.currPixelPos.x, self.currPixelPos.y - self.dimensions.y * SCALE / 2,
+    self.dimensions.x * SCALE, 2 * SCALE)
+  love.graphics.setColor(1, 0, 0, 0.5)
+  love.graphics.rectangle('fill',
+    self.currPixelPos.x, self.currPixelPos.y - self.dimensions.y * SCALE / 2,
+    self.dimensions.x * SCALE * self.health * 0.01, 2 * SCALE)
+  love.graphics.setColor(1, 1, 1, 1)
+
+  if debug then
   -- Draw the path which the enemies will follow
-  if self.path ~= nil and self.moving then
-    for _, vec in ipairs(self.path) do
-      local pos = Mob.posToPixel(vec, self.dimensions, self.worldPos)
-      love.graphics.circle('fill', pos.x + self.dimensions.x / 2 * SCALE,
-        pos.y + self.dimensions.y / 2 * SCALE, 3
-      )
+    if self.path ~= nil and self.moving then
+      for _, vec in ipairs(self.path) do
+        local pos = Mob.posToPixel(vec, self.dimensions, self.worldPos)
+        love.graphics.circle('fill', pos.x + self.dimensions.x / 2 * SCALE,
+          pos.y + self.dimensions.y / 2 * SCALE, 3
+        )
+      end
     end
   end
 end

@@ -22,33 +22,48 @@ function love.load()
   love.graphics.setBackgroundColor(0.2, 0.2, 0.2, 1)
 
   lvl1 = {
-    {6, 6, 6},
-    {1, 1, 6},
-    {6, 6, 6},
-    {6, 6, 6},
-    {1, 1, 6},
-    {6, 6, 6},
+    {6, 6, 6, 6, 6, 6},
+    {6, 6, 6, 6, 6, 6},
+    {6, 1, 6, 1, 6, 6},
+    {6, 6, 6, 6, 6, 6},
+    {6, 1, 6, 1, 6, 6},
+    {6, 6, 6, 6, 6, 6},
+    {6, 6, 6, 6, 6, 6},
+    {6, 6, 6, 6, 6, 6},
+    {6, 1, 1, 1, 6, 6},
+    {6, 1, 1, 1, 6, 6},
+    {6, 1, 1, 1, 6, 6},
+    {6, 6, 6, 6, 6, 6},
   }
 
 
   lvl1_height = {
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
-    {0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
   }
 
   keyboardOnly = true
+  debug = true
   SCALE = 2
 
   local spawn   = Vector(1, 1)
-  local goal    = Vector(6, 1)
+  local goal    = Vector(12, 6)
 
   MAP = Map(lvl1, lvl1_height, spawn, goal)
 
-  print("__Visit http://127.0.0.1:8000 for debugging__")
+  if debug then
+    print("__Visit http://127.0.0.1:8000 for debugging__")
+  end
 end
 
 
@@ -56,6 +71,10 @@ function love.keypressed(key)
 
   if key == 'a' then
     MAP:addMob()
+  end
+
+  if key == 't' then
+    MAP:addTower()
   end
 
   if key == 'space' then
@@ -75,7 +94,9 @@ end
 
 function love.update(dt)
   MAP:update(dt)
-  require("lovebird").update()
+  if debug then
+    require("lovebird").update()
+  end
 end
 
 
@@ -89,7 +110,7 @@ function love.draw()
   )
   local tileSelected = "None"
 
-  if MAP.tileSelected ~= nil then
+  if MAP.tileSelected  then
     tileSelected = MAP.tileSelected[1] .. " x " .. MAP.tileSelected[2]
   end
   love.graphics.print(

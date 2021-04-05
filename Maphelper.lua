@@ -5,8 +5,18 @@ function Map:distPoints(x1, y1, x2, y2)
 end
 
 
+function Map:addTower(towerType)
+  local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
+  local towerType = towerType or
+    Tower(towerPos, self.map, self.pos)
+  table.insert(self.towers, towerType)
+  self.map[towerPos.x][towerPos.y] = 16
+end
+
+
 function Map:addMob(mobtype)
-  local mobType = mobType or Mob(self.mobSpawn, self.mobGoal, self.map, self.pos)
+  local mobType = mobType or
+    Mob(self.mobSpawn, self.mobGoal, self.map, self.pos)
   table.insert(self.mobs, mobType)
 end
 
@@ -42,75 +52,83 @@ function Map:translation(dt)
 end
 
 
--- Handles chaning the height or type of tiles (mostly just for fun) //FIXME
+-- Create a walkable TF map for pathfinding
+function Map:createwalkableMap()
+  local tfMap = {}
+  for i = 1, #self.map do
+    tfMap[i] = {}
+    for j = 1, #self.map[i] do
+      local canWalk = false
+      for _, v in ipairs(self.walkable) do
+        if v == self.map[i][j] then
+          canWalk = true
+        end
+      end
+      table.insert(tfMap[i], canWalk)
+    end
+  end
+  self.tfMap = tfMap
+end
+
+
+function Map.checkValidPlacement(mapObj)
+  mapObj:createwalkableMap()
+  local path = Luafinding.FindPath(mapObj.mobSpawn, mapObj.mobGoal, mapObj.tfMap)
+
+  if path then return true end
+  return false
+end
+
+
+-- Update mobs paths
+function Map:updateMobPaths()
+  for _, m in ipairs(self.mobs) do
+  m:updatePath(self.map)
+  end
+end
+
+
 function Map:changeTiles()
   if self.tileSelected ~= nil then -- Raise and lower tiles if it is not nil
     local timeNow = love.timer.getTime()
-    -- CHANGE TILES
-    if timeNow > self.timerTileChanged + self.timerTileChangedLast
-    and self.tileSelectionMode == 'changetile' then
+    if timeNow > self.timerTileChanged + self.timerTileChangedLast then
 
-      local i, j = self.tileSelected[1], self.tileSelected[2]
+      -- CHANGE TILE FEATURE --
 
-      -- Increase tile quad if left is pressed and decrease if right is pressed
-      if love.mouse.isDown(1) then
-        self.map[i][j] = self.map[i][j] + 1
+      if self.tileSelectionMode == 'changetile' then
+        local i, j = self.tileSelected[1], self.tileSelected[2]
 
+        if love.mouse.isDown(1) then
+          self.map[i][j] = self.map[i][j] + 1
+          if self.map[i][j] > 40 then self.map[i][j] = 1 end
+          self:updateMobPaths() -- Update paths if tile is changed
+          self.timerTileChangedLast = timeNow
 
-        if self.map[i][j] > 40 then self.map[i][j] = 1 end
-
-        -- Update mobs paths
-        for _, m in ipairs(self.mobs) do
-          m:updatePath(self.map)
+        else if love.mouse.isDown(2) then
+          self.map[i][j] = self.map[i][j] - 1
+          if self.map[i][j] < 1 then self.map[i][j] = 40 end
+          self:updateMobPaths() -- Update paths if tile is changed
+          self.timerTileChangedLast = timeNow
         end
+      end
+      end
 
-        self.timerTileChangedLast = timeNow
-      else if love.mouse.isDown(2) then
-        self.map[i][j] = self.map[i][j] - 1
+      -- ADD TOWERS FEATURE --
 
-        if self.map[i][j] < 1 then self.map[i][j] = 40 end
-
-        -- Update mobs paths
-        for _, m in ipairs(self.mobs) do
-          m:updatePath(self.map)
+      if self.tileSelectionMode == 'tower' and love.mouse.isDown(1) then
+        print('Tower placement')
+        local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
+        local currentTile = self.map[towerPos.x][towerPos.y]
+        self.map[towerPos.x][towerPos.y] = 16
+        if Map.checkValidPlacement(self) then
+          self:addTower()
+          self:updateMobPaths()
+        else
+          self.map[towerPos.x][towerPos.y] = currentTile
         end
-
         self.timerTileChangedLast = timeNow
       end
     end
-  end
-    -- RAISE AND LOWER TILES
-    -- if love.mouse.isDown(1) and -- If mouse is pressed raise the selected tile
-    -- love.timer.getTime() >
-    -- self.timerTileHeight + self.timerTileHeightLast and
-    -- self.tileSelectionMode == 'height' then
-    --   self.mapheight[self.tileSelected[1]][self.tileSelected[2]] =
-    --     self.mapheight[self.tileSelected[1]][self.tileSelected[2]] + 1
-    --   self.timerTileHeightLast = love.timer.getTime()
-
-    -- elseif love.mouse.isDown(2) and -- If m2 is pressed lower the selected tile
-    -- love.timer.getTime() > 
-    -- self.timerTileHeight + self.timerTileHeightLast and 
-    -- self.tileSelectionMode == 'height' then
-    --   self.mapheight[self.tileSelected[1]][self.tileSelected[2]] =
-    --     self.mapheight[self.tileSelected[1]][self.tileSelected[2]] - 1
-    --   self.timerTileHeightLast = love.timer.getTime()
-    -- end
-
-    -- PLACE TOWERS
-    -- if love.mouse.isDown(1) and
-    -- love.timer.getTime() >
-    -- self.timerTileHeight + self.timerTileHeightLast and
-    -- self.tileSelectionMode == 'tower' then
-
-    --   table.insert(self.towers, Tower(Vector(self.tileSelected[1], self.tileSelected[2]), self.map, Vector(self.x, self.y)))
-    --   self.timerTileHeightLast = love.timer.getTime()
-
-    --   local tfMap = Map.createPassableMap(self.map, self.passable)
-    --   for _, e in ipairs(self.enemies) do
-    --     e:updatePath(tfMap, self.mobGoal)
-    --   end
-    -- end
   end
 end
 

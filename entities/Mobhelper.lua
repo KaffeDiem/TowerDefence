@@ -13,7 +13,24 @@ function Mob:calculateNewPath()
       Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
     self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
     self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
+
+    self:updateImageDirection()
+
   end
+end
+
+
+-- Used for updating the mobs direction in images
+function Mob:updateImageDirection()
+    if self.direction.x > 0 then
+      if self.direction.y > 0 then self.imageDirection = "east"
+      else self.imageDirection = "north"
+      end
+    else
+      if self.direction.y > 0 then self.imageDirection = "south"
+      else self.imageDirection = "west"
+      end
+    end
 end
 
 
@@ -37,21 +54,21 @@ function Mob.posToPixel(pos, dim, worldPos)
 end
 
 
--- Create a passable map. This means a map that which enemies can walk on.
+-- Create a walkable map. This means a map that which enemies can walk on.
 -- This is used for pathfinding.
 -- A similar function is also used with mobs in the loading process.
 -- Example:
 -- worldMap = {{1, 1, 1,},{6, 6, 6,},{1, 1, 1,}}
--- passable = {6}
+-- walkable = {6}
 -- Return:
 -- {{false, false, false}, {true, true, true}, {false, false, false}}
-function Mob:createPassableMap()
+function Mob:createwalkableMap()
   local tfMap = {}
   for i = 1, #self.map do
     tfMap[i] = {}
     for j = 1, #self.map[i] do
       local canWalk = false
-      for _, v in ipairs(self.passable) do
+      for _, v in ipairs(self.walkable) do
         if v == self.map[i][j] then
           canWalk = true
         end
@@ -69,7 +86,7 @@ function Mob:updatePath(newMap)
   -- If mob has not reached end
   if self.spawn ~= self.goal then
     self.map = newMap or self.map
-    self:createPassableMap() -- Update the mobs true/false map
+    self:createwalkableMap() -- Update the mobs true/false map
 
     self.path = nil
     -- Reset values before running the pathfinding algorithm
