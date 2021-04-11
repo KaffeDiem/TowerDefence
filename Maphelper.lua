@@ -5,12 +5,12 @@ function Map:distPoints(x1, y1, x2, y2)
 end
 
 
-function Map:addTower(towerType)
+function Map:addTower(towerType, mapPlaceHolder)
   local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
   local towerType = towerType or
     Tower(towerPos, self.map, self.pos)
   table.insert(self.towers, towerType)
-  self.map[towerPos.x][towerPos.y] = 16
+  self.map[towerPos.x][towerPos.y] = mapPlaceHolder
 end
 
 
@@ -116,12 +116,12 @@ function Map:changeTiles()
       -- ADD TOWERS FEATURE --
 
       if self.tileSelectionMode == 'tower' and love.mouse.isDown(1) then
-        print('Tower placement')
         local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
         local currentTile = self.map[towerPos.x][towerPos.y]
-        self.map[towerPos.x][towerPos.y] = 16
+        local placeholder = 29 
+        self.map[towerPos.x][towerPos.y] = placeholder
         if Map.checkValidPlacement(self) then
-          self:addTower()
+          self:addTower(nil, placeholder)
           self:updateMobPaths()
         else
           self.map[towerPos.x][towerPos.y] = currentTile
@@ -158,3 +158,60 @@ function Map:getTileSelected()
   end
 end
 
+
+-- Create a random map of size rows, cols
+function Map.createRandomMap(rows, cols, walkable)
+  ::retry::
+
+  local map = {}
+  local height = {}
+
+  local rows = rows or math.random(10, 20)
+  local cols = cols or math.random(5, 10)
+
+  print('size: ', rows, cols)
+
+  local spawn = Vector(1,    math.random(rows))
+  local goal  = Vector(rows, math.random(cols))
+
+  local walkable = walkable or {6, 16}
+
+
+  for i = 1, rows do
+    table.insert(map, {})
+    table.insert(height, {})
+    -- This is the loop in which tile are decided
+    for j = 1, cols do
+
+      local variance = {16, 16, 16, 16, 4, 3, 17} -- Lava and stone
+
+
+      table.insert(map[i], variance[math.random(#variance)])
+      table.insert(height[i], 0)
+
+
+    end
+  end
+
+  -- Create the true/false map
+  local tf = {}
+  for i = 1, #map do
+    tf[i] = {}
+    for j = 1, #map[i] do
+      local canWalk = false
+      for _, v in ipairs(walkable) do
+        if v == map[i][j] then
+          canWalk = true
+        end
+      end
+      table.insert(tf[i], canWalk)
+    end
+  end
+
+  if Luafinding.FindPath(spawn, goal, tf) == nil then
+    goto retry
+  end
+
+  return {map, height, spawn, goal}
+
+end

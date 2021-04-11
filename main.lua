@@ -5,6 +5,7 @@ Class = require "modules.classic"
 require "modules/luafinding/vector"
 require "modules/luafinding/heap"
 require "modules/luafinding/luafinding"
+require "modules/timer"
 
 -- Import other entities
 require "Map"
@@ -59,7 +60,9 @@ function love.load()
   local spawn   = Vector(1, 1)
   local goal    = Vector(12, 6)
 
-  MAP = Map(lvl1, lvl1_height, spawn, goal)
+  local randommap = Map.createRandomMap()
+
+  MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
 
   if debug then
     print("__Visit http://127.0.0.1:8000 for debugging__")
@@ -67,33 +70,11 @@ function love.load()
 end
 
 
-function love.keypressed(key)
-
-  if key == 'a' then
-    MAP:addMob()
-  end
-
-  if key == 't' then
-    MAP:addTower()
-  end
-
-  if key == 'space' then
-    if MAP.tileSelectionMode == 'height' then
-      MAP.tileSelectionMode = 'changetile'
-    elseif MAP.tileSelectionMode == 'changetile' then
-      MAP.tileSelectionMode = 'tower'
-    else MAP.tileSelectionMode = 'height'
-    end
-  end
-
-  if key == 'r' then
-    love.load()
-  end
-end
-
 
 function love.update(dt)
   MAP:update(dt)
+
+  -- Print debugging info to a browser
   if debug then
     require("lovebird").update()
   end
@@ -123,4 +104,27 @@ function love.draw()
   )
 
   MAP:draw()
+end
+
+
+function love.keypressed(key)
+
+  if key == 'a' then
+    MAP:addMob()
+  end
+
+  if key == 't' then
+    MAP:addTower()
+  end
+
+  if key == 'space' then
+    if MAP.tileSelectionMode == 'changetile' then
+      MAP.tileSelectionMode = 'tower'
+    else MAP.tileSelectionMode = 'changetile'
+    end
+  end
+
+  if key == 'r' then
+    love.load()
+  end
 end

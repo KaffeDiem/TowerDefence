@@ -13,7 +13,7 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.imageWidth = self.tilesheet:getWidth()
   self.imageHeight = self.tilesheet:getHeight()
   self.imageSelector = love.graphics.newImage("images/tileselector.png")
-  self.walkable = {6}
+  self.walkable = {6, 16}
 
   SCALE = 2
 
@@ -33,7 +33,7 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
 
   self.tilesHovered = {} -- Table containing all tiles hovered (inside hitbox)
   self.tileSelected = nil -- if tile is selected then {i, j, pixel x, pixel h}
-  self.tileSelectionMode = 'changetile' -- Change height or tile
+  self.tileSelectionMode = 'tower' -- Change height or tile
 
   self.timerTileChanged = 0.2 -- Increase height every 0.2 sec
   self.timerTileChangedLast = love.timer.getTime()

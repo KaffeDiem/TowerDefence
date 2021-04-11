@@ -10,10 +10,18 @@ function Tower:new(position, worldMap, worldPos)
 
   self.pos = position -- Vector containing x and y coordinates
   self.posPixel = Tower.posToPixel(self.pos, self.dimensions, self.worldPos)
+
+  self.bullets = {}
 end
 
 
-function Tower:update()
+function Tower:update(dt)
+
+  -- This is where the bullets get updated each tick
+  for _, bullet in ipairs(self.bullets) do
+
+  end
+
 end
 
 
@@ -39,4 +47,9 @@ function Tower.posToPixel(pos, dim, worldPos)
     + ((pos.x * dim.y / 4) * SCALE)
     + ((pos.y * dim.y / 4) * SCALE)
   )
+end
+
+
+function Tower:shoot(mob)
+
 end

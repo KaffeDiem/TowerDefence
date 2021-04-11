@@ -10,7 +10,7 @@ function Mob:new(spawn, goal, map, worldPos)
   self.map = map
   self.spawn = spawn
   self.goal = goal
-  self.walkable = {6}
+  self.walkable = {6, 16}
   self.hasReachedEnd = false
   self.health = 100
 

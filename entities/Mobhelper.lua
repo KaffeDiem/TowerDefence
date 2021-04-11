@@ -1,6 +1,6 @@
 -- Calculate the new path from one tile to the next
+-- and sets the new direction and position.
 -- current, next: Two vector coordinates on the map
--- Returns: an array of vector coordinates to visit as pixels
 function Mob:calculateNewPath()
   self.currPos = self.nextPos
   self.nextPos = table.remove(self.path, 1)
@@ -8,15 +8,12 @@ function Mob:calculateNewPath()
   self.startPixelPos =
     Mob.posToPixel(self.currPos, self.dimensions, self.worldPos)
 
-  if #self.path > 0 then
-    self.nextPixelPos =
-      Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
-    self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
-    self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
+  self.nextPixelPos =
+    Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
+  self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
+  self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
 
-    self:updateImageDirection()
-
-  end
+  self:updateImageDirection()
 end
 
 
