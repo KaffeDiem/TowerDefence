@@ -10,11 +10,11 @@ function Mob:new(spawn, goal, map, worldPos)
   self.map = map
   self.spawn = spawn
   self.goal = goal
-  self.walkable = {6, 16}
+  self.walkable = WALKABLE
   self.hasReachedEnd = false
   self.health = 100
 
-  self.movSpeed = 20 -- Default movementSpeed of 50
+  self.movSpeed = 60 -- Default movementSpeed of 50
 
   self:createwalkableMap() -- Create the tfmap
   self.path = Luafinding.FindPath(self.spawn, self.goal, self.tfMap)
@@ -46,11 +46,18 @@ function Mob:new(spawn, goal, map, worldPos)
     love.graphics.newImage("images/Mob/east.png")
   }
   self:updateImageDirection()
+
+  self.hasDied = false
+  self.hasReachedEnd = false
 end
 
 
 -- Updates the position of the mob
 function Mob:update(dt)
+  -- Make sure that the mob is alive and healthy
+  if self.health < 1 then
+    self.hasDied = true
+  end
   -- If the entity should be moving
   if self.moving and self.path ~= nil then
     -- Take care of the movement
@@ -63,6 +70,7 @@ function Mob:update(dt)
       else
         -- Stop moving once we get to final tile
         self.moving = false
+        self.hasReachedEnd = true
       end
     end
   end

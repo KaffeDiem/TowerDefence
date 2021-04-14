@@ -17,6 +17,11 @@ function Mob:calculateNewPath()
 end
 
 
+function Mob:takeDamage(amount)
+  self.health = self.health - amount
+end
+
+
 -- Used for updating the mobs direction in images
 function Mob:updateImageDirection()
     if self.direction.x > 0 then
@@ -97,8 +102,6 @@ function Mob:updatePath(newMap)
       self.moving = true
 
       if self.distNextPos == 0 then
-        -- // TODO update
-        -- self.currPos = table.remove(self.path, 1) -- Get current position
         self.nextPos = table.remove(self.path, 1) -- Get next position
         self.moving = true
 

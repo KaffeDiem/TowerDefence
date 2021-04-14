@@ -6,22 +6,23 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
     "Creating a new map: Map and MapHeight table should be same dimension"
   )
 
-  self.quads = {}
   self.tilesheet = love.graphics.newImage("images/tilesheet.png")
+  self.quads = {}
   self.tileWidth = 32 -- Pixels wide
   self.tileHeight = 32-- Pixels tall
   self.imageWidth = self.tilesheet:getWidth()
   self.imageHeight = self.tilesheet:getHeight()
   self.imageSelector = love.graphics.newImage("images/tileselector.png")
-  self.walkable = {6, 16}
-
-  SCALE = 2
+  self.background = love.graphics.newImage("images/background.png")
+  self.walkable = WALKABLE
 
   local x = love.graphics.getWidth() / 2 - (self.tileWidth / 2) * SCALE
   local y = love.graphics.getHeight() * 0.2
   self.pos = Vector(x, y) -- The position which the map is being drawn from
 
   -- Initialization of the mouse and translation layer
+  self.tmx = 0
+  self.tmy = 0
   self.tx = 0
   self.ty = 0
   self.sx = 1
@@ -54,12 +55,52 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.mobSpawn = mobSpawn
   self.mobGoal = mobGoal
 
+
   self.towers = {}
   self.mobs = {}
+
+  self.playerHealth = 5
+
+  -- ALL THINGS RELATED TO LOADING THE PRINCESS -- 👸
+  self.princessTimer = Timer(0.5)
+  self.princessCounter = 1
+  self.princessQuads = {}
+  self.princessSheet = love.graphics.newImage("images/princess.png")
+  self.princessPos = Tower.posToPixel(
+    self.mobGoal, Vector(32, 32), self.pos
+  )
+  -- Load princess images
+  for i = 0, self.princessSheet:getWidth() - 1, 32 do
+    table.insert(
+      self.princessQuads,
+      love.graphics.newQuad(
+        i, 0, self.tileWidth, self.tileHeight,
+        self.princessSheet:getWidth(), self.princessSheet:getHeight()
+    ))
+  end
+
+  -- Loading the hearth images
+  self.hearthQuads = {}
+  self.hearthImage = love.graphics.newImage("images/hearths.png")
+  for i = 0, self.hearthImage:getWidth() - 1, 64 do
+    table.insert(
+      self.hearthQuads,
+      love.graphics.newQuad(
+      i, 0, 64, 64, self.hearthImage:getWidth(), self.hearthImage:getHeight()  
+      )
+    )
+  end
+
+  self.mobTimer = Timer(1)
 end
 
 
 function Map:update(dt)
+  self.mobTimer:update() -- Add mobs if the timer has run out
+  if self.mobTimer:hasFinished() then
+    self:addMob()
+    self.mobTimer:reset()
+  end
   self.tilesHovered = {} -- Reset the tilesHovered table every frame
 
   self:translation(dt) -- Movement and translation layer of the map
@@ -69,8 +110,21 @@ function Map:update(dt)
   self:changeTiles() -- Change height and type of tiles
 
   if self.mobs ~= nil then -- If the table is not empty then update the mobs
-    for _, mob in ipairs(self.mobs) do
+    for k, mob in ipairs(self.mobs) do
       mob:update(dt)
+
+      -- Remove the mob if it has died
+      if mob.hasDied then
+        table.remove(self.mobs, k)
+      end
+
+      if mob.hasReachedEnd then -- If a mob reached the end
+        table.remove(self.mobs, k)
+        if self.playerHealth > 0 then
+          self.playerHealth = self.playerHealth - 1
+        end
+      end
+
     end
   end
 
@@ -78,6 +132,28 @@ function Map:update(dt)
     for _, tower in ipairs(self.towers) do
       tower:update(dt)
     end
+  end
+
+  -- Check if towers should shoot for mobs
+  for _, tower in ipairs(self.towers) do
+    for _, mob in ipairs(self.mobs) do
+      if Vector.dist(tower.posPixel, mob.currPixelPos) < tower.range * SCALE then
+        tower:shoot(mob)
+      end
+    end
+  end
+
+  self.princessTimer:update()
+  if self.princessTimer:hasFinished() then
+    if self.princessCounter > #self.princessQuads -1 then
+      self.princessCounter = 1
+    else self.princessCounter = self.princessCounter + 1
+    end
+    self.princessTimer:reset()
+  end
+
+  if self.playerHealth < 1 then
+    GAMESTATE = "gameover"
   end
 end
 
@@ -120,6 +196,7 @@ function Map:draw()
       end
     end
   end
+
   -- Draw the tile selector if one is selected
   if self.tileSelected ~= nil then
     love.graphics.draw(self.imageSelector,
@@ -127,6 +204,7 @@ function Map:draw()
       0, SCALE, SCALE)
   end
 
+  -- Update mobs and towers
   if self.mobs ~= nil then
     for _, mob in ipairs(self.mobs) do
       mob:draw()
@@ -138,5 +216,22 @@ function Map:draw()
       tower:draw()
     end
   end
+
   self:getTileSelected() -- Get selected tile when mouse is hovering
+
+  -- Draw the princess
+  love.graphics.draw(self.princessSheet, self.princessQuads[self.princessCounter],
+    self.princessPos.x, self.princessPos.y - 10 * SCALE, 0, SCALE, SCALE
+  )
+  -- Draw the hearths representing hp
+  love.graphics.draw(self.hearthImage, self.hearthQuads[6-self.playerHealth],
+    self.princessPos.x - 18 * SCALE,
+    self.princessPos.y - 25 * SCALE, 0, SCALE, SCALE
+  )
+end
+
+
+function Map:touchControls(dx, dy)
+  self.tx = self.tx + dx
+  self.ty = self.ty + dy
 end

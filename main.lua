@@ -1,80 +1,77 @@
 -- Importing modules
 Class = require "modules.classic"
+suit = require "modules.suit"
 
 -- Import A* algorithm
-require "modules/luafinding/vector"
-require "modules/luafinding/heap"
-require "modules/luafinding/luafinding"
-require "modules/timer"
+require "modules.luafinding.vector"
+require "modules.luafinding.heap"
+require "modules.luafinding.luafinding"
+require "modules.timer"
 
 -- Import other entities
 require "Map"
-require "entities/Mob"
-require "entities/Tower"
-require "entities/Dragon"
-require "entities/Skeleton"
+require "entities.Mob"
+require "entities.Tower"
+require "entities.Dragon"
+require "entities.Skeleton"
+require "entities.Bullet"
+require "entities.Main_menu"
+require "entities.Game_over"
 
--- Keep images pixelated as the are scaled in size
+-- Keep images pixelated as they are scaled in size
 love.graphics.setDefaultFilter('nearest')
 
 
 function love.load()
-
-  love.graphics.setBackgroundColor(0.2, 0.2, 0.2, 1)
-
-  lvl1 = {
-    {6, 6, 6, 6, 6, 6},
-    {6, 6, 6, 6, 6, 6},
-    {6, 1, 6, 1, 6, 6},
-    {6, 6, 6, 6, 6, 6},
-    {6, 1, 6, 1, 6, 6},
-    {6, 6, 6, 6, 6, 6},
-    {6, 6, 6, 6, 6, 6},
-    {6, 6, 6, 6, 6, 6},
-    {6, 1, 1, 1, 6, 6},
-    {6, 1, 1, 1, 6, 6},
-    {6, 1, 1, 1, 6, 6},
-    {6, 6, 6, 6, 6, 6},
-  }
-
-
-  lvl1_height = {
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0},
-  }
-
+  ----------------------------------------
+  -- SOME CONFIGURATION WHICH IS GLOBAL --
+  ----------------------------------------
   keyboardOnly = true
-  debug = true
-  SCALE = 2
-
-  local spawn   = Vector(1, 1)
-  local goal    = Vector(12, 6)
-
-  local randommap = Map.createRandomMap()
-
-  MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
-
+  debug = true -- Runs a debugging server as well and renders different things
+  SCALE = 2 -- 32x32 is scaled up to 64x64
+  MOBILE = false
+  GAMESTATE = "menu"
+  WALKABLE = {6, 11, 14, 15, 16, 17, 18, 19}
+  -- Detect if the user is a mobile or a desktop user
+  if love.system.getOS() == 'iOS' or love.system.getOS() == 'Android' then
+    MOBILE = true
+  end
+  -- Some mobile configuration which hides the status bar
+  if MOBILE then love.window.setFullscreen(true) end
+  -- Debugging with lovebird if debug is enabled.
   if debug then
     print("__Visit http://127.0.0.1:8000 for debugging__")
   end
+
+  -- Setting the global background color
+  love.graphics.setBackgroundColor(0.1, 0.1, 0.1, 1)
+  iflash_small = love.graphics.newFont("fonts/iflash.ttf", 10, "none")
+  iflash_big = love.graphics.newFont("fonts/iflash.ttf", 18, "none")
+  love.graphics.setFont(iflash_big)
+
+
+  -- The main menu object.
+  MENU = Main_menu()
+  GAMEOVER = Game_over()
+
+  -- Generate a random map, spawn point and so on
+  local randommap = Map.createRandomMap(nil, nil, WALKABLE)
+  -- Creation of the map object
+  MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
 end
 
 
 
 function love.update(dt)
-  MAP:update(dt)
+  if GAMESTATE == 'menu' then
+    MENU:update(dt)
+  elseif GAMESTATE == 'running' then
+    MAP:update(dt) -- Update the map object
+  elseif GAMESTATE == 'gameover' then
+    GAMEOVER:update(dt)
+  end
 
-  -- Print debugging info to a browser
+  -- Update lovebird if debugging is enabled.
   if debug then
     require("lovebird").update()
   end
@@ -82,49 +79,72 @@ end
 
 
 function love.draw()
-  love.graphics.setFont(
-    love.graphics.newFont("fonts/fira.ttf", 10)
-  )
+  -------------------------------------
+  -- DRAWING OF ACTUAL GAME ENTITIES --
+  -------------------------------------
+  if GAMESTATE == 'menu' then
+    MENU:draw()
+    -- MAP:draw()
+  elseif GAMESTATE == 'gameover' then
+    GAMEOVER:draw()
+  elseif GAMESTATE == 'running' then
+    MENU:draw()
+    MAP:draw()
+    -----------------------------------------------------------
+    --DEBUGGING INFORMATION PRINTED OUT ON TOP OF THE SCREEN --
+    -- ONLY WHEN MAP IS RUNNING                              --
+    -----------------------------------------------------------
+    if debug then
+      love.graphics.translate(-MAP.tx, -MAP.ty)
+      love.graphics.print(
+        "FPS: " .. love.timer.getFPS(), 10, 10
+      )
+      local tileSelected = "None"
 
-  love.graphics.print(
-    "FPS: " .. love.timer.getFPS(), 10, 10
-  )
-  local tileSelected = "None"
-
-  if MAP.tileSelected  then
-    tileSelected = MAP.tileSelected[1] .. " x " .. MAP.tileSelected[2]
+      if MAP.tileSelected  then
+        tileSelected = MAP.tileSelected[1] .. " x " .. MAP.tileSelected[2]
+      end
+      love.graphics.print(
+        "TILE: " .. tileSelected,
+        10, 25
+      )
+      love.graphics.print(
+        "MODE: " .. MAP.tileSelectionMode,
+        10, 40
+      )
+    else love.graphics.print("If you see this the gamestate is invalid")
+    end
   end
-  love.graphics.print(
-    "TILE: " .. tileSelected,
-    10, 25
-  )
-  love.graphics.print(
-    "MODE: " .. MAP.tileSelectionMode,
-    10, 40
-  )
-
-  MAP:draw()
 end
 
 
 function love.keypressed(key)
-
-  if key == 'a' then
-    MAP:addMob()
-  end
-
-  if key == 't' then
-    MAP:addTower()
-  end
-
-  if key == 'space' then
-    if MAP.tileSelectionMode == 'changetile' then
-      MAP.tileSelectionMode = 'tower'
-    else MAP.tileSelectionMode = 'changetile'
+  if GAMESTATE == "running" then
+    if key == 'a' and debug then
+      MAP:addMob()
+    end
+    if key == 'escape' then
+      GAMESTATE = "menu"
     end
   end
 
-  if key == 'r' then
-    love.load()
+  if debug then
+    if key == 'space' then
+      if MAP.tileSelectionMode == 'changetile' then
+        MAP.tileSelectionMode = 'tower'
+      else MAP.tileSelectionMode = 'changetile'
+      end
+    end
+
+    if key == 'r' then
+      love.load()
+    end
+  end
+end
+
+
+function love.touchmoved( id, x, y, dx, dy, pressure )
+  if MOBILE and GAMESTATE == "running" then
+    MAP:touchControls(dx, dy)
   end
 end

@@ -12,21 +12,38 @@ function Tower:new(position, worldMap, worldPos)
   self.posPixel = Tower.posToPixel(self.pos, self.dimensions, self.worldPos)
 
   self.bullets = {}
+  self.timerBullet = Timer(1)
+
+  self.range = 60
+
+  self.currMob = nil
 end
 
 
 function Tower:update(dt)
 
   -- This is where the bullets get updated each tick
-  for _, bullet in ipairs(self.bullets) do
+  for k, bullet in ipairs(self.bullets) do
+    bullet:update(dt)
+
+    if bullet.hasHit then
+      table.remove(self.bullets, k)
+      self.currMob:takeDamage(10)
+    end
 
   end
+
+  self.timerBullet:update()
 
 end
 
 
 function Tower:draw()
   love.graphics.draw(self.image, self.posPixel.x, self.posPixel.y, 0, SCALE, SCALE)
+
+  for _, b in ipairs(self.bullets) do
+    b:draw()
+  end
 end
 
 
@@ -51,5 +68,11 @@ end
 
 
 function Tower:shoot(mob)
-
+  self.currMob = mob
+  if self.timerBullet:hasFinished() then
+    table.insert(self.bullets, 
+      Bullet(self.posPixel, mob.currPixelPos, self.dimensions)
+    )
+    self.timerBullet:reset()
+  end
 end
