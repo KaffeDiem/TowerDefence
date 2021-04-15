@@ -16,16 +16,19 @@ function Main_menu:update(dt)
 
   -- Put a button on the screen. If hit, show a message
   local start = suit.Button("Start", suit.layout:row(buttonSize, 30))
-  local quit = suit.Button("Exit", suit.layout:row(buttonSize, 30))
+
+  -- Buttons only shown on desktop
+  if not MOBILE then
+    local quit = suit.Button("Exit", suit.layout:row(buttonSize, 30))
+
+    if quit.hit then
+      love.event.quit('quit')
+    end
+  end
 
   if start.hit then
     GAMESTATE = "running"
   end
-
-  if quit.hit then
-    love.event.quit('quit')
-  end
-
 end
 
 

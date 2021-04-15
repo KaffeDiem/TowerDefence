@@ -27,10 +27,29 @@ function Map:addTower(towerType, mapPlaceHolder)
 end
 
 
-function Map:addMob(mobtype)
-  local mobType = mobType or
-    Mob(self.mobSpawn, self.mobGoal, self.map, self.pos)
-  table.insert(self.mobs, mobType)
+-- Take a table of tables as input with mobs, see waves.lua file for more info
+-- Could be eg. the 'easy' table.
+function Map:generateMobs(t)
+  math.randomseed(os.time())
+
+  for i = 1, WAVEAMOUNT do
+    local randWave = math.random(#t)
+    local wave = t[randWave] -- The random wave which is to be added.
+
+    for j = 1, #wave do -- Run trough the tables of t
+      table.insert(self.waves, wave[j])
+    end
+    table.insert(self.waves, -1)
+  end
+end
+
+
+-- Type is an integer, 0 means no mob and 1 is the default mob
+function Map:addMob(type)
+  if type == 1 then
+    local Mob = Mob(self.mobSpawn, self.mobGoal, self.map, self.pos)
+    table.insert(self.mobs, Mob)
+  end
 end
 
 
@@ -191,13 +210,12 @@ function Map.createRandomMap(rows, cols, walkable)
   -- These are all the different levels
   local levels = {
     {1, 6, 6, 6, 6, 6, 14, 0, 0}, -- Sand, wood and empty space
-    {16, 16, 16, 16, 16, 4, 0}, -- Lava, stone and empty space
+    -- {16, 16, 16, 16, 16, 4, 0}, -- Lava, stone and empty space
     {6, 6, 6, 6, 6, 6, 6, 31, 32, 33, 34, 0}, -- Woods
     {1, 2, 15, 15, 15, 0} -- Ice and snow
   }
 
   local randomLevel = math.random(#levels)
-  print(randomLevel)
   local variance = levels[randomLevel]
 
   for i = 1, rows do

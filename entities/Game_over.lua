@@ -9,6 +9,7 @@ end
 
 
 function Game_over:update(dt)
+  lg.setFont(iflash_big)
   local buttonSize = 100 * SCALE
 
   suit.layout:reset(lg:getWidth()/2 - buttonSize / 2, lg:getHeight()*0.4,
@@ -22,12 +23,20 @@ function Game_over:update(dt)
     -- Generate a new map
     local randommap = Map.createRandomMap()
     MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
+    if DIFFICULTY == "easy" then
+      MAP:generateMobs(WAVES.easy)
+    end
+    PLAYERSCORE = 0
     GAMESTATE = "running"
   end
 
   if main_menu.hit then
     local randommap = Map.createRandomMap()
     MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
+    if DIFFICULTY == "easy" then
+      MAP:generateMobs(WAVES.easy)
+    end
+    PLAYERSCORE = 0
     GAMESTATE = "menu"
   end
 end
@@ -39,5 +48,8 @@ function Game_over:draw()
     lg:getHeight() / self.background:getHeight()
   )
 
+  lg.setFont(iflash_big)
+  lg.print("The princess died!", lg:getWidth()/2, lg:getHeight()/4)
+  lg.print("Score: " .. PLAYERSCORE, lg:getWidth()/2, lg:getHeight()/7)
   suit:draw()
 end

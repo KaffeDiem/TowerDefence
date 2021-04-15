@@ -17,6 +17,7 @@ require "entities.Skeleton"
 require "entities.Bullet"
 require "entities.Main_menu"
 require "entities.Game_over"
+require "entities.waves"
 
 -- Keep images pixelated as they are scaled in size
 love.graphics.setDefaultFilter('nearest')
@@ -32,6 +33,9 @@ function love.load()
   MOBILE = false
   GAMESTATE = "menu"
   WALKABLE = {6, 11, 14, 15, 16, 17, 18, 19}
+  WAVEAMOUNT = 1 -- Amount of waves per level
+  DIFFICULTY = "easy"
+
   -- Detect if the user is a mobile or a desktop user
   if love.system.getOS() == 'iOS' or love.system.getOS() == 'Android' then
     MOBILE = true
@@ -49,8 +53,11 @@ function love.load()
   iflash_big = love.graphics.newFont("fonts/iflash.ttf", 18, "none")
   love.graphics.setFont(iflash_big)
 
+  ---------------------------------------------
+  -- SETTING UP INITAL MAPS AND SCREENS    ----
+  ---------------------------------------------
+  PLAYERSCORE = 0
 
-  -- The main menu object.
   MENU = Main_menu()
   GAMEOVER = Game_over()
 
@@ -58,6 +65,9 @@ function love.load()
   local randommap = Map.createRandomMap(nil, nil, WALKABLE)
   -- Creation of the map object
   MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
+  if DIFFICULTY == "easy" then
+    MAP:generateMobs(WAVES.easy)
+  end
 end
 
 
@@ -95,7 +105,7 @@ function love.draw()
     -- ONLY WHEN MAP IS RUNNING                              --
     -----------------------------------------------------------
     if debug then
-      love.graphics.translate(-MAP.tx, -MAP.ty)
+      -- love.graphics.translate(-MAP.tx, -MAP.ty)
       love.graphics.print(
         "FPS: " .. love.timer.getFPS(), 10, 10
       )
@@ -121,7 +131,7 @@ end
 function love.keypressed(key)
   if GAMESTATE == "running" then
     if key == 'a' and debug then
-      MAP:addMob()
+      MAP:addMob(1)
     end
     if key == 'escape' then
       GAMESTATE = "menu"

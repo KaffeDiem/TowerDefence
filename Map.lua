@@ -60,6 +60,8 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.mobs = {}
 
   self.playerHealth = 5
+  self.playerGold = 10
+  self.playerScore = 0
 
   -- ALL THINGS RELATED TO LOADING THE PRINCESS -- 👸
   self.princessTimer = Timer(0.5)
@@ -91,16 +93,60 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
     )
   end
 
+  -- Loading the gold images
+  self.goldQuads = {}
+  self.goldImage = love.graphics.newImage("images/gold.png")
+  self.goldCounter = 1
+  self.goldTimer = Timer(0.1)
+  for i = 0, 160-1, 16 do
+    table.insert(
+      self.goldQuads,
+      love.graphics.newQuad(
+      i, 0, 16, 16, self.goldImage:getWidth(), self.goldImage:getHeight()
+      )
+    )
+  end
+  print(#self.goldQuads)
+
+  self.waves = {}
   self.mobTimer = Timer(1)
+  self.currMob = -1
 end
 
 
 function Map:update(dt)
   self.mobTimer:update() -- Add mobs if the timer has run out
+  self.goldTimer:update()
+
+  -- Wavesystem implementation
   if self.mobTimer:hasFinished() then
-    self:addMob()
-    self.mobTimer:reset()
+    if self.waves then
+      if self.currMob == -1 then
+        if #self.mobs < 1 then
+          self.currMob = table.remove(self.waves)
+        end
+      else
+        self:addMob(self.currMob)
+        self.currMob = table.remove(self.waves)
+        self.playerScore = self.playerScore + 1
+        self.mobTimer:reset()
+      end
+    end
+    if #self.waves < 1 and #self.mobs < 1 then
+      GAMESTATE = "gamewon"
+    end
   end
+
+  PLAYERSCORE = self.playerScore
+
+  if self.goldTimer:hasFinished() then
+    self.goldCounter = self.goldCounter + 1
+    if self.goldCounter > #self.goldQuads then
+      self.goldCounter = 1
+    end
+    self.goldTimer:reset()
+  end
+
   self.tilesHovered = {} -- Reset the tilesHovered table every frame
 
   self:translation(dt) -- Movement and translation layer of the map
@@ -228,6 +274,20 @@ function Map:draw()
     self.princessPos.x - 18 * SCALE,
     self.princessPos.y - 25 * SCALE, 0, SCALE, SCALE
   )
+
+	love.graphics.translate(-self.tx, -self.ty)
+  -- Draw a rectangle below the coin and amount
+  -- love.graphics.rectangle("fill",
+  --   love.graphics:getWidth()*0.9, love.graphics:getHeight()*0.05,
+  --   love.graphics:getWidth()*0.95 - love.graphics:getWidth()*0.90, 20
+  -- )
+  -- Draw the gold coin
+  love.graphics.setFont(iflash_big)
+  love.graphics.draw(self.goldImage, self.goldQuads[self.goldCounter],
+    love.graphics:getWidth()*0.9, love.graphics:getHeight()*0.05, 0, SCALE, SCALE
+  )
+  love.graphics.print(self.playerGold,
+    love.graphics:getWidth()*0.95, love.graphics:getHeight()*0.06)
 end
 
 
