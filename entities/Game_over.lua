@@ -49,7 +49,11 @@ function Game_over:draw()
   )
 
   lg.setFont(iflash_big)
-  lg.print("The princess died!", lg:getWidth()/2, lg:getHeight()/4)
-  lg.print("Score: " .. PLAYERSCORE, lg:getWidth()/2, lg:getHeight()/7)
+  local str1 = "The princess has died!"
+  local str1W = lg.getFont():getWidth(str1)
+  local score = "Score: " .. PLAYERSCORE
+  local scoreW = lg.getFont():getWidth(score)
+  lg.print(str1, lg:getWidth()/2 - str1W / 2, lg:getHeight()/4)
+  lg.print(score, lg:getWidth()/2 - scoreW, lg:getHeight()/7)
   suit:draw()
 end

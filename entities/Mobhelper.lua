@@ -1,3 +1,4 @@
+local lovebird = require "lovebird"
 -- Calculate the new path from one tile to the next
 -- and sets the new direction and position.
 -- current, next: Two vector coordinates on the map
@@ -14,6 +15,49 @@ function Mob:calculateNewPath()
   self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
 
   self:updateImageDirection()
+end
+
+
+-- Path is the path to a tilesheet
+function Mob:loadQuads()
+  -- Load the north quads
+  for i = 0, 2 do
+    table.insert(
+      self.quads.north,
+      love.graphics.newQuad( -- Tiles are 60 pixels tall and 40 wide
+        i * 40, 300,
+        40, 64, self.tileSheet:getWidth(), self.tileSheet:getHeight()
+      )
+    )
+  end
+  -- Load south quads
+  for i = 0, 2 do
+    table.insert(
+      self.quads.south,
+      love.graphics.newQuad( -- Tiles are 60 pixels tall and 40 wide
+        i * 40, 60,
+        40, 64, self.tileSheet:getWidth(), self.tileSheet:getHeight()
+      )
+    )
+  end
+  for i = 0, 2 do
+    table.insert(
+      self.quads.east,
+      love.graphics.newQuad( -- Tiles are 60 pixels tall and 40 wide
+        i * 40, 420,
+        40, 64, self.tileSheet:getWidth(), self.tileSheet:getHeight()
+      )
+    )
+  end
+  for i = 0, 2 do
+    table.insert(
+      self.quads.west,
+      love.graphics.newQuad( -- Tiles are 60 pixels tall and 40 wide
+        i * 40, 180,
+        40, 64, self.tileSheet:getWidth(), self.tileSheet:getHeight()
+      )
+    )
+  end
 end
 
 

@@ -17,6 +17,7 @@ require "entities.Skeleton"
 require "entities.Bullet"
 require "entities.Main_menu"
 require "entities.Game_over"
+require "entities.Game_won"
 require "entities.waves"
 
 -- Keep images pixelated as they are scaled in size
@@ -28,12 +29,12 @@ function love.load()
   -- SOME CONFIGURATION WHICH IS GLOBAL --
   ----------------------------------------
   keyboardOnly = true
-  debug = true -- Runs a debugging server as well and renders different things
+  debug = false -- Runs a debugging server as well and renders different things
   SCALE = 2 -- 32x32 is scaled up to 64x64
   MOBILE = false
   GAMESTATE = "menu"
   WALKABLE = {6, 11, 14, 15, 16, 17, 18, 19}
-  WAVEAMOUNT = 1 -- Amount of waves per level
+  WAVEAMOUNT = 2 -- Amount of waves per level
   DIFFICULTY = "easy"
 
   -- Detect if the user is a mobile or a desktop user
@@ -57,9 +58,11 @@ function love.load()
   -- SETTING UP INITAL MAPS AND SCREENS    ----
   ---------------------------------------------
   PLAYERSCORE = 0
+  PLAYERHEALTH = 5
 
   MENU = Main_menu()
   GAMEOVER = Game_over()
+  GAMEWON = Game_won()
 
   -- Generate a random map, spawn point and so on
   local randommap = Map.createRandomMap(nil, nil, WALKABLE)
@@ -79,6 +82,8 @@ function love.update(dt)
     MAP:update(dt) -- Update the map object
   elseif GAMESTATE == 'gameover' then
     GAMEOVER:update(dt)
+  elseif GAMESTATE == 'gamewon' then
+    GAMEWON:update(dt)
   end
 
   -- Update lovebird if debugging is enabled.
@@ -92,11 +97,14 @@ function love.draw()
   -------------------------------------
   -- DRAWING OF ACTUAL GAME ENTITIES --
   -------------------------------------
+  print(GAMESTATE)
   if GAMESTATE == 'menu' then
     MENU:draw()
     -- MAP:draw()
   elseif GAMESTATE == 'gameover' then
     GAMEOVER:draw()
+  elseif GAMESTATE == 'gamewon' then
+    GAMEWON:draw()
   elseif GAMESTATE == 'running' then
     MENU:draw()
     MAP:draw()
@@ -122,8 +130,8 @@ function love.draw()
         "MODE: " .. MAP.tileSelectionMode,
         10, 40
       )
-    else love.graphics.print("If you see this the gamestate is invalid")
     end
+    else love.graphics.print("If you see this the gamestate is invalid")
   end
 end
 

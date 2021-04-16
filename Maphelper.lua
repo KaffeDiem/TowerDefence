@@ -199,8 +199,8 @@ function Map.createRandomMap(rows, cols, walkable)
   local map = {}
   local height = {}
 
-  local rows = rows or math.random(20, 40)
-  local cols = cols or math.random(5, 10)
+  local rows = rows or math.random(20, 30)
+  local cols = cols or math.random(7, 15)
 
   local spawn = Vector(1,    math.random(rows))
   local goal  = Vector(rows, math.random(cols))
@@ -210,9 +210,9 @@ function Map.createRandomMap(rows, cols, walkable)
   -- These are all the different levels
   local levels = {
     {1, 6, 6, 6, 6, 6, 14, 0, 0}, -- Sand, wood and empty space
-    -- {16, 16, 16, 16, 16, 4, 0}, -- Lava, stone and empty space
+    {16, 16, 16, 16, 4, 0}, -- Lava, stone and empty space
     {6, 6, 6, 6, 6, 6, 6, 31, 32, 33, 34, 0}, -- Woods
-    {1, 2, 15, 15, 15, 0} -- Ice and snow
+    {1, 2, 15, 15, 15, 15, 0} -- Ice and snow
   }
 
   local randomLevel = math.random(#levels)
@@ -225,6 +225,7 @@ function Map.createRandomMap(rows, cols, walkable)
     for j = 1, cols do
 
       table.insert(map[i], variance[math.random(#variance)])
+
       table.insert(height[i], 0)
 
     end

@@ -41,7 +41,19 @@ function Mob:new(spawn, goal, map, worldPos)
   self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
 
   self.imageDirection = "north"
-  self.images = {
+
+  self.quads = {
+    north = {},
+    south = {},
+    east = {},
+    west = {}
+  }
+  self.tileSheet = love.graphics.newImage("images/Bob/bobsheet.png")
+  self:loadQuads() -- Loading all quads for the tilesheet
+  self.animationTimer = Timer(0.2) -- Next animation in 0.2 seconds
+  self.currAnimation = 1
+
+  self.images = { -- // TODO make these obsolete
     love.graphics.newImage("images/Mob/north.png"),
     love.graphics.newImage("images/Mob/east.png")
   }
@@ -52,10 +64,21 @@ function Mob:new(spawn, goal, map, worldPos)
 end
 
 
--- Updates the position of the mob
 function Mob:update(dt)
+
+  -- Updates animation
+  self.animationTimer:update(dt)
+
+  if self.animationTimer:hasFinished() then
+    self.currAnimation = self.currAnimation + 1 -- Next animation
+    if self.currAnimation > #self.quads.north then
+      self.currAnimation = 1 -- Reset after drawing all animations
+    end
+    self.animationTimer:reset()
+  end
+
   -- Make sure that the mob is alive and healthy
-  if self.health < 1 then
+  if self.health < 1 then -- Else kill it
     self.hasDied = true
   end
   -- If the entity should be moving
@@ -80,25 +103,31 @@ end
 -- Draw the mob, default is just a placeholder image and function should
 -- be replaced in each mob
 function Mob:draw()
+
+
   if self.imageDirection == "north" then
-    love.graphics.draw(
-      self.images[1], self.currPixelPos.x, 
-      self.currPixelPos.y - (self.dimensions.y / 2) * SCALE, 0, SCALE, SCALE
+    love.graphics.draw( -- Draw the animation
+      self.tileSheet, self.quads.north[self.currAnimation],
+      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      0.6 * SCALE, 0.6 * SCALE
     )
   elseif self.imageDirection == "east" then
-    love.graphics.draw(
-      self.images[2], self.currPixelPos.x, 
-      self.currPixelPos.y - (self.dimensions.y / 2) * SCALE, 0, SCALE, SCALE
+    love.graphics.draw( -- Draw the animation
+      self.tileSheet, self.quads.east[self.currAnimation],
+      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      0.6 * SCALE, 0.6 * SCALE
     )
   elseif self.imageDirection == "west" then
-    love.graphics.draw(
-      self.images[1], self.currPixelPos.x + self.dimensions.x * SCALE,
-      self.currPixelPos.y - (self.dimensions.y / 4) * SCALE, 0, -SCALE, SCALE
+    love.graphics.draw( -- Draw the animation
+      self.tileSheet, self.quads.west[self.currAnimation],
+      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      0.6 * SCALE, 0.6 * SCALE
     )
   elseif self.imageDirection == "south" then
-    love.graphics.draw(
-      self.images[2], self.currPixelPos.x + self.dimensions.x * SCALE,
-      self.currPixelPos.y - (self.dimensions.y / 4) * SCALE, 0, -SCALE, SCALE
+    love.graphics.draw( -- Draw the animation
+      self.tileSheet, self.quads.south[self.currAnimation],
+      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      0.6 * SCALE, 0.6 * SCALE
     )
   end
 

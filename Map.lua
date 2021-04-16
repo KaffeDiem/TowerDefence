@@ -55,13 +55,12 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.mobSpawn = mobSpawn
   self.mobGoal = mobGoal
 
-
   self.towers = {}
   self.mobs = {}
 
-  self.playerHealth = 5
+  self.playerHealth = PLAYERHEALTH
   self.playerGold = 10
-  self.playerScore = 0
+  self.playerScore = -2
 
   -- ALL THINGS RELATED TO LOADING THE PRINCESS -- 👸
   self.princessTimer = Timer(0.5)
@@ -106,7 +105,6 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
       )
     )
   end
-  print(#self.goldQuads)
 
   self.waves = {}
   self.mobTimer = Timer(1)
@@ -124,20 +122,23 @@ function Map:update(dt)
       if self.currMob == -1 then
         if #self.mobs < 1 then
           self.currMob = table.remove(self.waves)
+          self.playerScore = self.playerScore + 1 -- Add to SCORE if new wave
         end
       else
         self:addMob(self.currMob)
         self.currMob = table.remove(self.waves)
-        self.playerScore = self.playerScore + 1
         self.mobTimer:reset()
       end
     end
     if #self.waves < 1 and #self.mobs < 1 then
+      PLAYERSCORE = self.playerScore + PLAYERSCORE -- Add 
+      GAMEWON = Game_won()
+      PLAYERHEALTH = self.playerHealth
       GAMESTATE = "gamewon"
     end
   end
 
-  PLAYERSCORE = self.playerScore
+  print(PLAYERSCORE)
 
   if self.goldTimer:hasFinished() then
     self.goldCounter = self.goldCounter + 1
@@ -199,6 +200,8 @@ function Map:update(dt)
   end
 
   if self.playerHealth < 1 then
+    PLAYERSCORE = self.playerScore
+    PLAYERHEALTH = 5 -- Reset global player health
     GAMESTATE = "gameover"
   end
 end
