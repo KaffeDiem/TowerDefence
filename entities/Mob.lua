@@ -14,7 +14,7 @@ function Mob:new(spawn, goal, map, worldPos)
   self.hasReachedEnd = false
   self.health = 100
 
-  self.movSpeed = 60 -- Default movementSpeed of 50
+  self.movSpeed = 20 -- Default movementSpeed of 50
 
   self:createwalkableMap() -- Create the tfmap
   self.path = Luafinding.FindPath(self.spawn, self.goal, self.tfMap)

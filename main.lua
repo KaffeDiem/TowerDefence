@@ -29,12 +29,12 @@ function love.load()
   -- SOME CONFIGURATION WHICH IS GLOBAL --
   ----------------------------------------
   keyboardOnly = true
-  debug = false -- Runs a debugging server as well and renders different things
+  debug = true -- Runs a debugging server as well and renders different things
   SCALE = 2 -- 32x32 is scaled up to 64x64
   MOBILE = false
   GAMESTATE = "menu"
   WALKABLE = {6, 11, 14, 15, 16, 17, 18, 19}
-  WAVEAMOUNT = 2 -- Amount of waves per level
+  WAVEAMOUNT = 4 -- Amount of waves per level
   DIFFICULTY = "easy"
 
   -- Detect if the user is a mobile or a desktop user
@@ -97,7 +97,6 @@ function love.draw()
   -------------------------------------
   -- DRAWING OF ACTUAL GAME ENTITIES --
   -------------------------------------
-  print(GAMESTATE)
   if GAMESTATE == 'menu' then
     MENU:draw()
     -- MAP:draw()

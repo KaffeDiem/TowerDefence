@@ -226,6 +226,7 @@ function Map.createRandomMap(rows, cols, walkable)
 
       table.insert(map[i], variance[math.random(#variance)])
 
+
       table.insert(height[i], 0)
 
     end

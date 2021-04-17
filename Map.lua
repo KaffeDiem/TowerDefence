@@ -138,7 +138,6 @@ function Map:update(dt)
     end
   end
 
-  print(PLAYERSCORE)
 
   if self.goldTimer:hasFinished() then
     self.goldCounter = self.goldCounter + 1
@@ -253,7 +252,13 @@ function Map:draw()
       0, SCALE, SCALE)
   end
 
-  -- Update mobs and towers
+  -- Draw mobs
+  function sortMobs(a, b)
+    return a.currPixelPos.y < b.currPixelPos.y
+  end
+
+  table.sort(self.mobs, sortMobs)
+
   if self.mobs ~= nil then
     for _, mob in ipairs(self.mobs) do
       mob:draw()
@@ -268,29 +273,31 @@ function Map:draw()
 
   self:getTileSelected() -- Get selected tile when mouse is hovering
 
-  -- Draw the princess
+  ----------------------
+  -- Draw the princess--
+  ----------------------
   love.graphics.draw(self.princessSheet, self.princessQuads[self.princessCounter],
     self.princessPos.x, self.princessPos.y - 10 * SCALE, 0, SCALE, SCALE
   )
-  -- Draw the hearths representing hp
   love.graphics.draw(self.hearthImage, self.hearthQuads[6-self.playerHealth],
     self.princessPos.x - 18 * SCALE,
     self.princessPos.y - 25 * SCALE, 0, SCALE, SCALE
   )
 
+  ------------------------
+  -- Draw the gold coin --
+  ------------------------
 	love.graphics.translate(-self.tx, -self.ty)
-  -- Draw a rectangle below the coin and amount
-  -- love.graphics.rectangle("fill",
-  --   love.graphics:getWidth()*0.9, love.graphics:getHeight()*0.05,
-  --   love.graphics:getWidth()*0.95 - love.graphics:getWidth()*0.90, 20
-  -- )
-  -- Draw the gold coin
   love.graphics.setFont(iflash_big)
+  -- Draw gold coin
   love.graphics.draw(self.goldImage, self.goldQuads[self.goldCounter],
-    love.graphics:getWidth()*0.9, love.graphics:getHeight()*0.05, 0, SCALE, SCALE
+    love.graphics:getWidth()*0.9, love.graphics:getHeight()*0.05, 0,
+    SCALE, SCALE
   )
+  -- Draw gold amount
   love.graphics.print(self.playerGold,
-    love.graphics:getWidth()*0.95, love.graphics:getHeight()*0.06)
+    love.graphics:getWidth()*0.9 + 20*SCALE,
+    love.graphics:getHeight()*0.05 + 4 * SCALE)
 end
 
 
