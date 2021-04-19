@@ -5,6 +5,8 @@ Maps are randomly generated and so are the waves which you will fight!
 
 This is VERY much still in development, but below are some images giving you an idea of the art. The content of this repository does not contain images for the project, only the source code.
 
+See the **Projects** tab for info on how far the project has come.
+
 
 ## Guide on how to render isometric tiles
 
