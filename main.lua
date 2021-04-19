@@ -55,6 +55,7 @@ function love.load()
   iflash_big = love.graphics.newFont("fonts/iflash.ttf", 18, "none")
   love.graphics.setFont(iflash_big)
 
+
   ---------------------------------------------
   -- SETTING UP INITAL MAPS AND SCREENS    ----
   ---------------------------------------------
@@ -72,6 +73,7 @@ function love.load()
   if DIFFICULTY == "easy" then
     MAP:generateMobs(WAVES.easy)
   end
+
 end
 
 
@@ -121,6 +123,7 @@ function love.draw()
       if MAP.tileSelected  then
         tileSelected = MAP.tileSelected[1] .. " x " .. MAP.tileSelected[2]
       end
+
       love.graphics.print(
         "TILE: " .. tileSelected,
         10, 25
@@ -130,7 +133,8 @@ function love.draw()
         10, 40
       )
     end
-    else love.graphics.print("If you see this the gamestate is invalid")
+
+  else love.graphics.print("If you see this the gamestate is invalid")
   end
 end
 
