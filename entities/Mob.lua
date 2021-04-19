@@ -108,25 +108,25 @@ function Mob:draw()
   if self.imageDirection == "north" then
     love.graphics.draw( -- Draw the animation
       self.tileSheet, self.quads.north[self.currAnimation],
-      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      self.currPixelPos.x + 5 * SCALE, self.currPixelPos.y - 15 * SCALE, 0,
       0.6 * SCALE, 0.6 * SCALE
     )
   elseif self.imageDirection == "east" then
     love.graphics.draw( -- Draw the animation
       self.tileSheet, self.quads.east[self.currAnimation],
-      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      self.currPixelPos.x + 5 * SCALE, self.currPixelPos.y - 15 * SCALE, 0,
       0.6 * SCALE, 0.6 * SCALE
     )
   elseif self.imageDirection == "west" then
     love.graphics.draw( -- Draw the animation
       self.tileSheet, self.quads.west[self.currAnimation],
-      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      self.currPixelPos.x + 5 * SCALE, self.currPixelPos.y - 15 * SCALE, 0,
       0.6 * SCALE, 0.6 * SCALE
     )
   elseif self.imageDirection == "south" then
     love.graphics.draw( -- Draw the animation
       self.tileSheet, self.quads.south[self.currAnimation],
-      self.currPixelPos.x, self.currPixelPos.y - 15 * SCALE, 0,
+      self.currPixelPos.x + 5 * SCALE, self.currPixelPos.y - 15 * SCALE, 0,
       0.6 * SCALE, 0.6 * SCALE
     )
   end

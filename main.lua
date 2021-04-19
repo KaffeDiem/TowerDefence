@@ -19,6 +19,7 @@ require "entities.Main_menu"
 require "entities.Game_over"
 require "entities.Game_won"
 require "entities.waves"
+require "entities.Notification"
 
 -- Keep images pixelated as they are scaled in size
 love.graphics.setDefaultFilter('nearest')
@@ -112,7 +113,6 @@ function love.draw()
     -- ONLY WHEN MAP IS RUNNING                              --
     -----------------------------------------------------------
     if debug then
-      -- love.graphics.translate(-MAP.tx, -MAP.ty)
       love.graphics.print(
         "FPS: " .. love.timer.getFPS(), 10, 10
       )
@@ -137,6 +137,9 @@ end
 
 function love.keypressed(key)
   if GAMESTATE == "running" then
+    if key == 'm' and debug then
+      MAP:sendNotification(3, "test")
+    end
     if key == 'a' and debug then
       MAP:addMob(1)
     end

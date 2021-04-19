@@ -109,6 +109,8 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.waves = {}
   self.mobTimer = Timer(1)
   self.currMob = -1
+
+  self.notifications = {}
 end
 
 
@@ -122,7 +124,6 @@ function Map:update(dt)
       if self.currMob == -1 then
         if #self.mobs < 1 then
           self.currMob = table.remove(self.waves)
-          self.playerScore = self.playerScore + 1 -- Add to SCORE if new wave
         end
       else
         self:addMob(self.currMob)
@@ -131,7 +132,6 @@ function Map:update(dt)
       end
     end
     if #self.waves < 1 and #self.mobs < 1 then
-      PLAYERSCORE = self.playerScore + PLAYERSCORE -- Add 
       GAMEWON = Game_won()
       PLAYERHEALTH = self.playerHealth
       GAMESTATE = "gamewon"
@@ -162,6 +162,8 @@ function Map:update(dt)
       -- Remove the mob if it has died
       if mob.hasDied then
         table.remove(self.mobs, k)
+        self.playerScore = self.playerScore + 1 -- Add to SCORE if new wave
+        PLAYERSCORE = self.playerScore + PLAYERSCORE
       end
 
       if mob.hasReachedEnd then -- If a mob reached the end
@@ -199,9 +201,19 @@ function Map:update(dt)
   end
 
   if self.playerHealth < 1 then
-    PLAYERSCORE = self.playerScore
     PLAYERHEALTH = 5 -- Reset global player health
     GAMESTATE = "gameover"
+  end
+  --------------------------
+  -- Update notifications --
+  --------------------------
+  if #self.notifications > 0 then
+    for k, v in ipairs(self.notifications) do
+      v:update(dt)
+      if v.isDone then
+        table.remove(self.notifications, k)
+      end
+    end
   end
 end
 
@@ -252,8 +264,10 @@ function Map:draw()
       0, SCALE, SCALE)
   end
 
-  -- Draw mobs
-  function sortMobs(a, b)
+  --------------------------
+  -- Draw mobs and towers --
+  --------------------------
+  local function sortMobs(a, b) -- Sorting mobs for correct drawing
     return a.currPixelPos.y < b.currPixelPos.y
   end
 
@@ -261,7 +275,7 @@ function Map:draw()
 
   if self.mobs ~= nil then
     for _, mob in ipairs(self.mobs) do
-      mob:draw()
+      mob:draw() -- Draw each mob object on the map
     end
   end
 
@@ -289,15 +303,32 @@ function Map:draw()
   ------------------------
 	love.graphics.translate(-self.tx, -self.ty)
   love.graphics.setFont(iflash_big)
+  local goldPlacement = love.graphics:getWidth()*0.9 -- 90% in on the screen
+  if love.graphics:getHeight() > love.graphics:getWidth() then
+    goldPlacement = love.graphics:getWidth()*0.80
+  end
+
   -- Draw gold coin
   love.graphics.draw(self.goldImage, self.goldQuads[self.goldCounter],
-    love.graphics:getWidth()*0.9, love.graphics:getHeight()*0.05, 0,
+    goldPlacement, love.graphics:getHeight()*0.05, 0,
     SCALE, SCALE
   )
   -- Draw gold amount
   love.graphics.print(self.playerGold,
-    love.graphics:getWidth()*0.9 + 20*SCALE,
-    love.graphics:getHeight()*0.05 + 4 * SCALE)
+    goldPlacement + 20*SCALE,
+    love.graphics:getHeight()*0.05 + 3 * SCALE)
+  ---------------------------
+  -- Draw the score ---------
+  ---------------------------
+  love.graphics.print(PLAYERSCORE, 50, 50)
+  --------------------------
+  -- Draw notifications ----
+  --------------------------
+  if #self.notifications > 0 then
+    for _, v in ipairs(self.notifications) do
+      v:draw()
+    end
+  end
 end
 
 

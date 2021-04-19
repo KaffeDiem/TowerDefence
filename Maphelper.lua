@@ -156,6 +156,7 @@ function Map:changeTiles()
           self:addTower(nil, placeholder)
           self:updateMobPaths()
         else
+          MAP:sendNotification(1, "Cannot block mobs paths")
           self.map[towerPos.x][towerPos.y] = currentTile
         end
         self.timerTileChangedLast = timeNow
@@ -202,6 +203,7 @@ function Map.createRandomMap(rows, cols, walkable)
   local rows = rows or math.random(20, 30)
   local cols = cols or math.random(7, 15)
 
+  -- //TODO make sure that the spawn is at a real tile
   local spawn = Vector(1,    math.random(rows))
   local goal  = Vector(rows, math.random(cols))
 
@@ -253,4 +255,9 @@ function Map.createRandomMap(rows, cols, walkable)
 
   return {map, height, spawn, goal}
 
+end
+
+
+function Map:sendNotification(time, message)
+  table.insert(self.notifications, Notification(time, message))
 end
