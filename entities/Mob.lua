@@ -48,7 +48,7 @@ function Mob:new(spawn, goal, map, worldPos)
     east = {},
     west = {}
   }
-  self.tileSheet = love.graphics.newImage("images/Bob/bobsheet.png")
+  self.tileSheet = love.graphics.newImage("images/Bob/bobsheet_zug.png")
   self:loadQuads() -- Loading all quads for the tilesheet
   self.animationTimer = Timer(0.2) -- Next animation in 0.2 seconds
   self.currAnimation = 1

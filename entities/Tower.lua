@@ -6,10 +6,10 @@ function Tower:new(position, worldMap, worldPos)
   self.worldPos = worldPos
   self.dimensions = Vector(32, 32) -- Default texture is 32x32
 
-  self.image = love.graphics.newImage("images/placeholderTower.png")
+  self.image = love.graphics.newImage("images/tower.png")
 
   self.pos = position -- Vector containing x and y coordinates
-  self.posPixel = Tower.posToPixel(self.pos, self.dimensions, self.worldPos)
+  self.currPixelPos = Tower.posToPixel(self.pos, self.dimensions, self.worldPos)
 
   self.bullets = {}
   self.timerBullet = Timer(1)
@@ -39,7 +39,9 @@ end
 
 
 function Tower:draw()
-  love.graphics.draw(self.image, self.posPixel.x, self.posPixel.y, 0, SCALE, SCALE)
+  love.graphics.draw(
+    self.image, self.currPixelPos.x, self.currPixelPos.y - 8 * SCALE, 0, SCALE, SCALE
+  )
 
   for _, b in ipairs(self.bullets) do
     b:draw()
@@ -70,8 +72,8 @@ end
 function Tower:shoot(mob)
   self.currMob = mob
   if self.timerBullet:hasFinished() then
-    table.insert(self.bullets, 
-      Bullet(self.posPixel, mob.currPixelPos, self.dimensions)
+    table.insert(self.bullets,
+      Bullet(self.currPixelPos, mob.currPixelPos, self.dimensions)
     )
     self.timerBullet:reset()
   end

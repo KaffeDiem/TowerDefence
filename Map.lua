@@ -96,7 +96,7 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.goldQuads = {}
   self.goldImage = love.graphics.newImage("images/gold.png")
   self.goldCounter = 1
-  self.goldTimer = Timer(0.1)
+  self.goldTimer = Timer(0.2)
   for i = 0, 160-1, 16 do
     table.insert(
       self.goldQuads,
@@ -185,7 +185,7 @@ function Map:update(dt)
   -- Check if towers should shoot for mobs
   for _, tower in ipairs(self.towers) do
     for _, mob in ipairs(self.mobs) do
-      if Vector.dist(tower.posPixel, mob.currPixelPos) < tower.range * SCALE then
+      if Vector.dist(tower.currPixelPos, mob.currPixelPos) < tower.range * SCALE then
         tower:shoot(mob)
       end
     end
@@ -267,23 +267,39 @@ function Map:draw()
   --------------------------
   -- Draw mobs and towers --
   --------------------------
-  local function sortMobs(a, b) -- Sorting mobs for correct drawing
+  local function sortListForDrawing(a, b) -- Sorting mobs for correct drawing
     return a.currPixelPos.y < b.currPixelPos.y
   end
 
-  table.sort(self.mobs, sortMobs)
-
-  if self.mobs ~= nil then
-    for _, mob in ipairs(self.mobs) do
-      mob:draw() -- Draw each mob object on the map
+  function TableConcat(t1,t2)
+    for i=1,#t2 do
+        t1[#t1+1] = t2[i]  --corrected bug. if t1[#t1+i] is used, indices will be skipped
     end
+    return t1
   end
 
-  if self.towers ~= nil then
-    for _, tower in ipairs(self.towers) do
-      tower:draw()
+  local entitites = {}
+  TableConcat(entitites, self.mobs); TableConcat(entitites, self.towers)
+  table.sort(entitites, sortListForDrawing)
+
+  if entitites then
+    for _, e in ipairs(entitites) do
+      e:draw()
     end
   end
+  -- table.sort(self.towers, sortMobs)
+
+  -- if self.mobs ~= nil then
+  --   for _, mob in ipairs(self.mobs) do
+  --     mob:draw() -- Draw each mob object on the map
+  --   end
+  -- end
+
+  -- if self.towers ~= nil then
+  --   for _, tower in ipairs(self.towers) do
+  --     tower:draw()
+  --   end
+  -- end
 
   self:getTileSelected() -- Get selected tile when mouse is hovering
 
