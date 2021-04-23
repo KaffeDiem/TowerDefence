@@ -5,7 +5,7 @@ function Map:distPoints(x1, y1, x2, y2)
 end
 
 
-function Map:addTower(towerType, mapPlaceHolder)
+function Map:addTower(towerType, mapPlaceHolder, oldTile)
   local newTowerPos = Vector(self.tileSelected[1], self.tileSelected[2])
 
   -- Check if tower has already been placed at set location
@@ -20,9 +20,15 @@ function Map:addTower(towerType, mapPlaceHolder)
   if not towerPlacedAlready then
     local towerType = towerType or -- TowerType is what kind of tower should go
       Tower(newTowerPos, self.map, self.pos)
-
-    table.insert(self.towers, towerType)
-    self.map[newTowerPos.x][newTowerPos.y] = mapPlaceHolder
+    local cost = towerType.cost
+    -- If the cost is smaller than the available gold
+    if self.playerGold - cost > -1 then
+      self.playerGold = self.playerGold - cost
+      table.insert(self.towers, towerType)
+      self.map[newTowerPos.x][newTowerPos.y] = mapPlaceHolder
+    else
+      self.map[newTowerPos.x][newTowerPos.y] = oldTile
+    end
   end
 end
 
@@ -120,13 +126,66 @@ function Map:updateMobPaths()
 end
 
 
-function Map:changeTiles()
-  if self.tileSelected ~= nil then -- Raise and lower tiles if it is not nil
+-- This function is called from Map:update and handles placement of towers
+-- on both mobile and desktop-- // FIXME this function is not currently in use
+function Map:checkTower()
+  if self.tileSelected then
+    -- Get the position on where to place a tower
+    local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
+    local currentTile = self.map[towerPos.x][towerPos.y]
+    local placeholder = 29
+
+    -- If the user agent is on a mobile device, use specific settings
+    if MOBILE and self.tileSelectionMode == 'tower' then
+
+    -- If the user agent is a desktop device
+    else
+      if self.tileSelectionMode == 'tower'
+      and self.timerTowerPlacement:hasFinished()
+      and love.mouse.isDown(1) then
+        self.map[towerPos.x][towerPos.y] = placeholder
+        -- Add a tower if the placement is valid / not on mobs path
+        if Map.checkValidPlacement(self) then
+          self:addTower(nil, placeholder, currentTile)
+          self:updateMobPaths()
+        else
+          MAP:sendNotification(1, "Cannot block mobs paths")
+          self.map[towerPos.x][towerPos.y] = currentTile
+        end
+        self.timerTileChangedLast = timeNow
+      end
+    end
+
+  end
+end
+
+
+function Map:changeTiles() -- // TODO rewrite this whole function
+  if self.tileSelected ~= nil then
     local timeNow = love.timer.getTime()
     if timeNow > self.timerTileChanged + self.timerTileChangedLast then
 
-      -- CHANGE TILE FEATURE --
+      -- ADD TOWERS FEATURE (for desktop) --
+      if self.tileSelectionMode == 'tower' and love.mouse.isDown(1) then
+        -- Getting new position and current tile
+        local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
+        local currentTile = self.map[towerPos.x][towerPos.y]
 
+        local placeholder = 29 -- // TODO fix the placeholder implementation
+
+        self.map[towerPos.x][towerPos.y] = placeholder
+        -- Add a tower if the placement is valid / not on mobs path
+        if Map.checkValidPlacement(self) then
+          self:addTower(nil, placeholder, currentTile)
+          self:updateMobPaths()
+        else
+          MAP:sendNotification(1, "Cannot block mobs paths")
+          self.map[towerPos.x][towerPos.y] = currentTile
+        end
+        self.timerTileChangedLast = timeNow
+      end
+
+      -- CHANGE TILE FEATURE --
       if self.tileSelectionMode == 'changetile' then
         local i, j = self.tileSelected[1], self.tileSelected[2]
 
@@ -145,22 +204,33 @@ function Map:changeTiles()
       end
       end
 
-      -- ADD TOWERS FEATURE --
 
-      if self.tileSelectionMode == 'tower' and love.mouse.isDown(1) then
-        local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
-        local currentTile = self.map[towerPos.x][towerPos.y]
-        local placeholder = 29 
-        self.map[towerPos.x][towerPos.y] = placeholder
-        if Map.checkValidPlacement(self) then
-          self:addTower(nil, placeholder)
-          self:updateMobPaths()
-        else
-          MAP:sendNotification(1, "Cannot block mobs paths")
-          self.map[towerPos.x][towerPos.y] = currentTile
-        end
-        self.timerTileChangedLast = timeNow
-      end
+      -- -- Mobile tower implementation -- 
+      -- if self.tileSelectionMode == 'tower' and MOBILE then
+      --   local buttonSize = 80
+      --   suit.layout:reset(love.graphics:getWidth()*0.8 - buttonSize / 2, love.graphics:getHeight()*0.9,
+      --     10 * SCALE, 10 * SCALE
+      --   )
+      --   local buy_tower =
+      --     suit.Button("Buy", suit.layout:row(buttonSize, 30))
+      --   if buy_tower.hit then
+      --     local towerPos = Vector(self.tileSelected[1], self.tileSelected[2])
+      --     local currentTile = self.map[towerPos.x][towerPos.y]
+
+      --     local placeholder = 29 -- // TODO fix the placeholder implementation
+
+      --     self.map[towerPos.x][towerPos.y] = placeholder
+      --     -- Add a tower if the placement is valid / not on mobs path
+      --     if Map.checkValidPlacement(self) then
+      --       self:addTower(nil, placeholder, currentTile)
+      --       self:updateMobPaths()
+      --     else
+      --       MAP:sendNotification(1, "Cannot block mobs paths")
+      --       self.map[towerPos.x][towerPos.y] = currentTile
+      --     end
+      --     self.timerTileChangedLast = timeNow
+      --   end
+      -- end
     end
   end
 end
@@ -227,8 +297,6 @@ function Map.createRandomMap(rows, cols, walkable)
     for j = 1, cols do
 
       table.insert(map[i], variance[math.random(#variance)])
-
-
       table.insert(height[i], 0)
 
     end

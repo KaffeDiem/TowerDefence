@@ -15,6 +15,7 @@ function Tower:new(position, worldMap, worldPos)
   self.timerBullet = Timer(1)
 
   self.range = 60
+  self.cost = 2 -- Default towers has a cost of 2
 
   self.currMob = nil
 end
@@ -40,7 +41,8 @@ end
 
 function Tower:draw()
   love.graphics.draw(
-    self.image, self.currPixelPos.x, self.currPixelPos.y - 8 * SCALE, 0, SCALE, SCALE
+    self.image, self.currPixelPos.x, self.currPixelPos.y - 10 * SCALE,
+    0, SCALE, SCALE
   )
 
   for _, b in ipairs(self.bullets) do

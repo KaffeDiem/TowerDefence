@@ -7,14 +7,13 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   )
 
   self.tilesheet = love.graphics.newImage("images/tilesheet.png")
-  self.quads = {}
-  self.tileWidth = 32 -- Pixels wide
+  self.quads = {}  self.tileWidth = 32 -- Pixels wide
   self.tileHeight = 32-- Pixels tall
   self.imageWidth = self.tilesheet:getWidth()
   self.imageHeight = self.tilesheet:getHeight()
   self.imageSelector = love.graphics.newImage("images/tileselector.png")
   self.background = love.graphics.newImage("images/background.png")
-  self.walkable = WALKABLE
+  self.walkable = WALKABLE -- A global table of maximum values
 
   local x = love.graphics.getWidth() / 2 - (self.tileWidth / 2) * SCALE
   local y = love.graphics.getHeight() * 0.2
@@ -39,6 +38,8 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.timerTileChanged = 0.2 -- Increase height every 0.2 sec
   self.timerTileChangedLast = love.timer.getTime()
 
+  self.timerTowerPlacement = Timer(0.2)
+
   -- Load tiles from tilesheet to self.quads
   for j = 0, self.imageHeight - 1, self.tileHeight do
     for i = 0, self.imageWidth - 1, self.tileWidth do
@@ -59,8 +60,7 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   self.mobs = {}
 
   self.playerHealth = PLAYERHEALTH
-  self.playerGold = 10
-  self.playerScore = -2
+  self.playerGold = 10 -- Initially players have 10 gold
 
   -- ALL THINGS RELATED TO LOADING THE PRINCESS -- 👸
   self.princessTimer = Timer(0.5)
@@ -107,6 +107,7 @@ function Map:new(map, mapheight, mobSpawn, mobGoal)
   end
 
   self.waves = {}
+  -- Time for next mob in the current wave
   self.mobTimer = Timer(1)
   self.currMob = -1
 
@@ -116,9 +117,12 @@ end
 
 function Map:update(dt)
   self.mobTimer:update() -- Add mobs if the timer has run out
-  self.goldTimer:update()
+  self.goldTimer:update() -- The animation for gold coins
+  self.timerTowerPlacement:update() -- How often is a tower to be placed
 
-  -- Wavesystem implementation
+  ------------------------
+  -- Wavesystem of mobs --
+  ------------------------
   if self.mobTimer:hasFinished() then
     if self.waves then
       if self.currMob == -1 then
@@ -138,7 +142,52 @@ function Map:update(dt)
     end
   end
 
+  self.tilesHovered = {} -- Reset the tilesHovered table every frame
+  self:translation(dt) -- Movement and translation layer of the map
+  -- Mouse coords as in game coords (translated mouse x, y)
+  self.tmx, self.tmy = self.mx - self.tx, self.my - self.ty
 
+  -- self:checkTower()
+  self:changeTiles() -- Change height and type of tiles
+
+  ----------------------------------
+  -- Updating and killing of mobs --
+  ----------------------------------
+  for k, mob in ipairs(self.mobs) do
+    mob:update(dt)
+    -- If a mob has been shot to death
+    if mob.hasDied then
+      PLAYERSCORE = PLAYERSCORE + mob.award -- Add award to score
+      self.playerGold = self.playerGold + mob.award
+      table.remove(self.mobs, k) -- Remove mob
+    end
+    -- If a mob has reached the princess
+    if mob.hasReachedEnd then
+      table.remove(self.mobs, k)
+      if self.playerHealth > 0 then
+        table.insert(
+          self.notifications, Notification(1, "Oh no! Princess Viola was hurt")
+        )
+        self.playerHealth = self.playerHealth - 1
+      end
+    end
+  end
+
+  -------------------------------------------
+  -- Updating towers and making them shoot --
+  -------------------------------------------
+  for _, tower in ipairs(self.towers) do
+    tower:update(dt) -- Update towers
+    for _, mob in ipairs(self.mobs) do
+      if Vector.dist(tower.currPixelPos, mob.currPixelPos)
+      < tower.range * SCALE then
+        tower:shoot(mob) -- Shoot at mob, if it is in range
+      end
+    end
+  end
+  ------------------
+  -- Update quads --
+  ------------------
   if self.goldTimer:hasFinished() then
     self.goldCounter = self.goldCounter + 1
     if self.goldCounter > #self.goldQuads then
@@ -146,51 +195,6 @@ function Map:update(dt)
     end
     self.goldTimer:reset()
   end
-
-  self.tilesHovered = {} -- Reset the tilesHovered table every frame
-
-  self:translation(dt) -- Movement and translation layer of the map
-  -- Mouse coords as in game coords (translated mouse x, y)
-  self.tmx, self.tmy = self.mx - self.tx, self.my - self.ty
-
-  self:changeTiles() -- Change height and type of tiles
-
-  if self.mobs ~= nil then -- If the table is not empty then update the mobs
-    for k, mob in ipairs(self.mobs) do
-      mob:update(dt)
-
-      -- Remove the mob if it has died
-      if mob.hasDied then
-        table.remove(self.mobs, k)
-        self.playerScore = self.playerScore + 1 -- Add to SCORE if new wave
-        PLAYERSCORE = self.playerScore + PLAYERSCORE
-      end
-
-      if mob.hasReachedEnd then -- If a mob reached the end
-        table.remove(self.mobs, k)
-        if self.playerHealth > 0 then
-          self.playerHealth = self.playerHealth - 1
-        end
-      end
-
-    end
-  end
-
-  if self.towers ~= nil then
-    for _, tower in ipairs(self.towers) do
-      tower:update(dt)
-    end
-  end
-
-  -- Check if towers should shoot for mobs
-  for _, tower in ipairs(self.towers) do
-    for _, mob in ipairs(self.mobs) do
-      if Vector.dist(tower.currPixelPos, mob.currPixelPos) < tower.range * SCALE then
-        tower:shoot(mob)
-      end
-    end
-  end
-
   self.princessTimer:update()
   if self.princessTimer:hasFinished() then
     if self.princessCounter > #self.princessQuads -1 then
@@ -200,10 +204,6 @@ function Map:update(dt)
     self.princessTimer:reset()
   end
 
-  if self.playerHealth < 1 then
-    PLAYERHEALTH = 5 -- Reset global player health
-    GAMESTATE = "gameover"
-  end
   --------------------------
   -- Update notifications --
   --------------------------
@@ -215,12 +215,19 @@ function Map:update(dt)
       end
     end
   end
+
+  -- Kill the player if less than 1 hp
+  if self.playerHealth < 1 then
+    PLAYERHEALTH = 5 -- Reset global player health
+    GAMESTATE = "gameover"
+  end
 end
 
 
 function Map:draw()
+  -- Translation and scaling is done here
 	love.graphics.translate(self.tx, self.ty)
-  love.graphics.scale(self.sx, self.sy)
+  love.graphics.scale(self.sx, self.sy) -- // TODO make mouse coords scale
 
   -- Drawing the map as isometric tiles
   for i = 1, #self.map do -- Loop trough rows
@@ -252,13 +259,12 @@ function Map:draw()
           -- Add the tile to tiles hovered, if mouse is on top of it
           table.insert(self.tilesHovered, {i, j, x, y})
         end
-
       end
     end
   end
 
-  -- Draw the tile selector if one is selected
-  if self.tileSelected ~= nil then
+  -- Draw tile selector if it is not nil
+  if self.tileSelected then
     love.graphics.draw(self.imageSelector,
       self.tileSelected[3], self.tileSelected[4],
       0, SCALE, SCALE)
@@ -267,18 +273,19 @@ function Map:draw()
   --------------------------
   -- Draw mobs and towers --
   --------------------------
-  local function sortListForDrawing(a, b) -- Sorting mobs for correct drawing
+  -- Sort the concatted list of towers and mobs for drawing
+  -- in the correct order.
+  local function sortListForDrawing(a, b)
     return a.currPixelPos.y < b.currPixelPos.y
   end
-
-  function TableConcat(t1,t2)
-    for i=1,#t2 do
-        t1[#t1+1] = t2[i]  --corrected bug. if t1[#t1+i] is used, indices will be skipped
-    end
+  -- Concat table 1 to table 2
+  function TableConcat(t1,t2) 
+    for i=1,#t2 do t1[#t1+1] = t2[i] end
     return t1
   end
 
   local entitites = {}
+
   TableConcat(entitites, self.mobs); TableConcat(entitites, self.towers)
   table.sort(entitites, sortListForDrawing)
 
@@ -287,19 +294,6 @@ function Map:draw()
       e:draw()
     end
   end
-  -- table.sort(self.towers, sortMobs)
-
-  -- if self.mobs ~= nil then
-  --   for _, mob in ipairs(self.mobs) do
-  --     mob:draw() -- Draw each mob object on the map
-  --   end
-  -- end
-
-  -- if self.towers ~= nil then
-  --   for _, tower in ipairs(self.towers) do
-  --     tower:draw()
-  --   end
-  -- end
 
   self:getTileSelected() -- Get selected tile when mouse is hovering
 
@@ -315,7 +309,7 @@ function Map:draw()
   )
 
   ------------------------
-  -- Draw the gold coin --
+  -- Draw gold and coin --
   ------------------------
 	love.graphics.translate(-self.tx, -self.ty)
   love.graphics.setFont(iflash_big)
@@ -323,13 +317,10 @@ function Map:draw()
   if love.graphics:getHeight() > love.graphics:getWidth() then
     goldPlacement = love.graphics:getWidth()*0.80
   end
-
-  -- Draw gold coin
   love.graphics.draw(self.goldImage, self.goldQuads[self.goldCounter],
     goldPlacement, love.graphics:getHeight()*0.05, 0,
     SCALE, SCALE
   )
-  -- Draw gold amount
   love.graphics.print(self.playerGold,
     goldPlacement + 20*SCALE,
     love.graphics:getHeight()*0.05 + 3 * SCALE)
@@ -345,6 +336,8 @@ function Map:draw()
       v:draw()
     end
   end
+
+  suit:draw()
 end
 
 

@@ -20,23 +20,13 @@ function Game_over:update(dt)
   local main_menu = suit.Button("Exit to main menu", suit.layout:row(buttonSize, 30))
 
   if again.hit then
-    -- Generate a new map
-    local randommap = Map.createRandomMap()
-    MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
-    if DIFFICULTY == "easy" then
-      MAP:generateMobs(WAVES.easy)
-    end
-    PLAYERSCORE = 0
+    -- Generate a new map and set gamestate to running
+    NewGame()
     GAMESTATE = "running"
   end
 
   if main_menu.hit then
-    local randommap = Map.createRandomMap()
-    MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
-    if DIFFICULTY == "easy" then
-      MAP:generateMobs(WAVES.easy)
-    end
-    PLAYERSCORE = 0
+    NewGame()
     GAMESTATE = "menu"
   end
 end

@@ -10,20 +10,21 @@ function Mob:new(spawn, goal, map, worldPos)
   self.map = map
   self.spawn = spawn
   self.goal = goal
-  self.walkable = WALKABLE
+  self.walkable = WALKABLE -- A global table of walkable tiles
   self.hasReachedEnd = false
-  self.health = 100
+  self.health = 100 -- How tough is the mob to kill?
+  self.award = 3 -- The award of killing a mob of this type
+  self.movSpeed = 30 -- Default movementSpeed of 50
 
-  self.movSpeed = 20 -- Default movementSpeed of 50
-
-  self:createwalkableMap() -- Create the tfmap
+  self:createwalkableMap() -- Create the tfmap (true/false-map)
+  -- Run pathfinding on the path.
   self.path = Luafinding.FindPath(self.spawn, self.goal, self.tfMap)
 
-  if self.path then
+  if self.path then -- If there is some path for the mob to travel
     self.currPos = table.remove(self.path, 1) -- Get current position
     self.nextPos = table.remove(self.path, 1) -- Get next position
     self.moving = true
-  else
+  else -- Mob just stand still at spawnpoint
     self.currPos = self.spawn
     self.nextPos = self.spawn
     self.moving = false
@@ -33,15 +34,17 @@ function Mob:new(spawn, goal, map, worldPos)
     Mob.posToPixel(self.currPos, self.dimensions, self.worldPos)
   self.startPixelPos = self.spawnPixelPos
   self.currPixelPos = self.spawnPixelPos -- First pos is same as spawn
-  self.nextPixelPos =
+  self.nextPixelPos = -- Position but translated to pixels
     Mob.posToPixel(self.nextPos, self.dimensions, self.worldPos)
-
+  -- Calculate the distance to the next position
   self.distNextPos = Vector.dist(self.currPixelPos, self.nextPixelPos)
-
+  -- The direction to travel towards next location from previous
   self.direction = (self.nextPixelPos - self.currPixelPos) / self.distNextPos
 
-  self.imageDirection = "north"
 
+  ---------------------
+  -- Load animations --
+  ---------------------
   self.quads = {
     north = {},
     south = {},
@@ -49,16 +52,13 @@ function Mob:new(spawn, goal, map, worldPos)
     west = {}
   }
   self.tileSheet = love.graphics.newImage("images/Bob/bobsheet_zug.png")
+  self.imageDirection = "north" -- Some default direction must be set
   self:loadQuads() -- Loading all quads for the tilesheet
   self.animationTimer = Timer(0.2) -- Next animation in 0.2 seconds
   self.currAnimation = 1
-
-  self.images = { -- // TODO make these obsolete
-    love.graphics.newImage("images/Mob/north.png"),
-    love.graphics.newImage("images/Mob/east.png")
-  }
   self:updateImageDirection()
 
+  -- For checking whether the mob has finished its journey or reached the goal
   self.hasDied = false
   self.hasReachedEnd = false
 end

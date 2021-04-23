@@ -30,7 +30,7 @@ function love.load()
   -- SOME CONFIGURATION WHICH IS GLOBAL --
   ----------------------------------------
   keyboardOnly = true
-  debug = true -- Runs a debugging server as well and renders different things
+  debug = false -- Runs a debugging server as well and renders different things
   SCALE = 2 -- 32x32 is scaled up to 64x64
   MOBILE = false
   GAMESTATE = "menu"
@@ -167,8 +167,23 @@ function love.keypressed(key)
 end
 
 
+-- For dragging around the map when on mobile
 function love.touchmoved( id, x, y, dx, dy, pressure )
   if MOBILE and GAMESTATE == "running" then
     MAP:touchControls(dx, dy)
+  end
+end
+
+-- Simply resets some global variables when a new game is started.
+-- Is used when game is lost as game can never be 'won' completely.
+function NewGame()
+  PLAYERSCORE = 0
+  GAMESTATE = "menu"
+  -- Creation and init of the new map
+  local randommap = Map.createRandomMap()
+  MAP = Map(randommap[1], randommap[2], randommap[3], randommap[4])
+
+  if DIFFICULTY == "easy" then
+    MAP:generateMobs(WAVES.easy)
   end
 end
